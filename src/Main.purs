@@ -11,7 +11,7 @@ import Halogen.VDom.Driver (runUI)
 
 import Auth0 (AUTH0EFF, Auth0Config(..), webAuth)
 import Auth0.Eval (runAuth0)
-import Component (component)
+import Container (component)
 
 auth0Config :: Auth0Config
 auth0Config = Auth0Config

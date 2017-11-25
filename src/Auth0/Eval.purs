@@ -13,6 +13,9 @@ import Data.DateTime.Instant (unInstant)
 import Data.Time.Duration (Milliseconds(..))
 import Data.Newtype (unwrap)
 import DOM (DOM)
+import DOM.HTML (window)
+import DOM.HTML.Location as Location
+import DOM.HTML.Window as Window
 import DOM.WebStorage (STORAGE, getItem, setItem, getLocalStorage)
 import Run (Run, interpret)
 
@@ -47,6 +50,7 @@ handleAuth0 wa (SetSession (Session session) a) = do
   let s = Session $ session{ expiresAt = unwrap $ (unInstant time) + (Milliseconds $ session.expiresIn * 1000.0) }
   ls <- liftEff getLocalStorage
   liftEff $ setItem ls sessionKey s
+  liftEff $ window >>= Window.location >>= Location.replace "/"
   pure a
 
 handleAuth0 wa (ParseHash a) = do
