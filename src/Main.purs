@@ -2,6 +2,7 @@ module Main where
 
 import Prelude
 import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Now (NOW)
 import DOM (DOM)
 import DOM.WebStorage (STORAGE)
 import Halogen as H
@@ -22,7 +23,7 @@ auth0Config = Auth0Config
   , redirectUri: "http://localhost:5000"
   }
 
-main :: Eff ( HA.HalogenEffects ( auth0 :: AUTH0EFF, dom :: DOM, storage :: STORAGE ) ) Unit
+main :: Eff ( HA.HalogenEffects ( auth0 :: AUTH0EFF, dom :: DOM, storage :: STORAGE, now :: NOW ) ) Unit
 main = HA.runHalogenAff do
   let auth0 = webAuth auth0Config
   runUI (H.hoist (runAuth0 auth0) component) unit =<< HA.awaitBody
