@@ -9,19 +9,11 @@ import Halogen as H
 import Halogen.Aff as HA
 import Halogen.VDom.Driver (runUI)
 
-import Auth0 (AUTH0EFF, Auth0Config(..), webAuth)
+import Auth0 (AUTH0EFF, Auth0Config, webAuth)
 import Auth0.Eval (runAuth0)
 import Container (component)
 
-auth0Config :: Auth0Config
-auth0Config = Auth0Config
-  { domain: "alunduil.auth0.com"
-  , clientID: "qCOuPm76SHhtqUY1dA29TWL4CGt0VJNU"
-  , responseType: "token id_token"
-  , audience: "https://alunduil.auth0.com/userinfo"
-  , scope: "openid"
-  , redirectUri: "https://awesome-saha-4147fc.netlify.com"
-  }
+foreign import auth0Config :: Auth0Config
 
 main :: Eff ( HA.HalogenEffects ( auth0 :: AUTH0EFF, dom :: DOM, storage :: STORAGE, now :: NOW ) ) Unit
 main = HA.runHalogenAff do

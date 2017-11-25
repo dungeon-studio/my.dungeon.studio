@@ -18,6 +18,18 @@ npm install --global bower
 npm install
 ```
 
+## Environment
+
+For development you will need a local `.env` file with the following variables defined:
+
+```bash
+AUTH0_REDIRECT_URI=http://localhost:5000
+AUTH0_AUDIENCE=https://alunduil.auth0.com/userinfo
+AUTH0_CLIENT_ID=qCOuPm76SHhtqUY1dA29TWL4CGt0VJNU
+AUTH0_SCOPE=openid
+AUTH0_DOMAIN=alunduil.auth0.com
+```
+
 ## Building
 
 ``` shell
