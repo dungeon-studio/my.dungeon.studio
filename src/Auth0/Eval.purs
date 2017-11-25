@@ -32,30 +32,39 @@ handleAuth0
   -> Auth0DSLF
   ~> Aff ( auth0 :: AUTH0EFF, dom :: DOM, storage :: STORAGE, now :: NOW | eff )
 handleAuth0 wa (Ask a) = pure (a wa)
+
 handleAuth0 wa (Authorize a) = do
   liftEff $ authorize wa
   pure a
+
 handleAuth0 wa (GetSession a) = do
   ls <- liftEff getLocalStorage
   session <- liftEff $ getItem ls sessionKey
   pure (a session)
+
 handleAuth0 wa (SetSession (Session session) a) = do
   time <- liftEff now
-  let s = Session $ session{ expiresAt = unwrap $ (unInstant time) + (Milliseconds session.expiresIn) }
+  let s = Session $ session{ expiresAt = unwrap $ (unInstant time) + (Milliseconds $ session.expiresIn * 1000.0) }
   ls <- liftEff getLocalStorage
   liftEff $ setItem ls sessionKey s
   pure a
+
 handleAuth0 wa (ParseHash a) = do
   session <- attempt $ parseHash wa
   case session of
     Left _ -> pure $ a Nothing
-    Right s -> do
+    Right Nothing -> pure $ a Nothing
+    Right (Just s) -> do
       ls <- liftEff $ getLocalStorage
       liftEff $ setItem ls sessionKey s
       pure $ a (Just s)
+
 handleAuth0 wa (CheckAuth a) = do
-  pure (a true)
-  {-- ls <- liftEff $ getLocalStorage --}
-  {-- session <- liftEff $ getItem ls sessionKey --}
-  {-- var expiresAt = JSON.parse(localStorage.getItem('expires_at')); --}
-  {--   return new Date().getTime() < expiresAt; --}
+  ls <- liftEff $ getLocalStorage
+  session <- liftEff $ getItem ls sessionKey
+  case session of
+    Nothing -> pure (a false)
+    (Just (Session s)) -> do
+      time <- liftEff now
+      let isLoggedIn = (unwrap $ unInstant time) < s.expiresAt
+      pure (a isLoggedIn)

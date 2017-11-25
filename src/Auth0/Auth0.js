@@ -10,20 +10,25 @@ exports.authorize = function (webAuth) {
   };
 };
 
-exports._parseHash = function (webAuth) {
-  return function (onError, onSuccess) {
-    var req = webAuth.parseHash(function (err, auth) {
-      console.log(err);
-      console.log(auth);
-      if (auth && auth.accessToken && auth.idToken) {
-        onSuccess(auth);
-      } else if (err) {
-        onError(err);
-      }
-    });
-    // Return a canceler, which is just another Aff effect.
-    return function (cancelError, cancelerError, cancelerSuccess) {
-      cancelerSuccess(); // invoke the success callback for the canceler
+exports._parseHash = function (just) {
+  return function (nothing) {
+    return function (webAuth) {
+      return function (onError, onSuccess) {
+        var req = webAuth.parseHash(function (err, auth) {
+          if (err) {
+            return onError(err);
+          }
+          if (!auth) {
+            return onSuccess(nothing);
+          }
+          console.log(auth);
+          return onSuccess(just(auth));
+        });
+        // Return a canceler, which is just another Aff effect.
+        return function (cancelError, cancelerError, cancelerSuccess) {
+          cancelerSuccess(); // invoke the success callback for the canceler
+        };
+      };
     };
   };
 };

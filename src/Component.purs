@@ -10,7 +10,7 @@ import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Run (Run)
 
-import Auth0.Algebra (AUTH0, authorize, parseHash, setSession)
+import Auth0.Algebra (AUTH0, authorize, isAuthenticated, parseHash, setSession)
 
 data Query a = Init a | Login a | Logout a
 data State = Authenticated | NotAuthenticated
@@ -56,7 +56,14 @@ component =
           lift $ setSession session
           H.put Authenticated
           pure next
-        Nothing -> pure next
+        Nothing -> do
+          isLoggedIn <- lift $ isAuthenticated
+          if isLoggedIn
+            then do
+              H.put Authenticated
+              pure next
+            else do
+              pure next
     Login next -> do
        lift $ authorize
        pure next

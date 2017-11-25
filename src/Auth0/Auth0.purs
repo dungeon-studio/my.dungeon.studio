@@ -15,15 +15,16 @@ import Control.Monad.Aff (Aff)
 import Control.Monad.Aff.Compat (EffFnAff, fromEffFnAff)
 import Control.Monad.Eff (Eff(), kind Effect)
 import Data.Generic (class Generic)
+import Data.Maybe (Maybe(..))
 
 foreign import data AUTH0EFF  :: Effect
 foreign import data WebAuth   :: Type
 foreign import webAuth :: Auth0Config -> WebAuth
 foreign import authorize :: forall eff. WebAuth -> Eff ( auth0 :: AUTH0EFF | eff ) Unit
-foreign import _parseHash :: forall eff. WebAuth -> EffFnAff ( auth0 :: AUTH0EFF | eff ) Session
+foreign import _parseHash :: forall a eff. (a -> Maybe a) -> Maybe a -> WebAuth -> EffFnAff ( auth0 :: AUTH0EFF | eff ) (Maybe Session)
 
-parseHash :: forall eff. WebAuth -> Aff ( auth0 :: AUTH0EFF | eff ) Session
-parseHash = fromEffFnAff <<< _parseHash
+parseHash :: forall eff. WebAuth -> Aff ( auth0 :: AUTH0EFF | eff ) (Maybe Session)
+parseHash = fromEffFnAff <<< _parseHash Just Nothing
 
 data LSKey a = SessionKey
 newtype Session = Session

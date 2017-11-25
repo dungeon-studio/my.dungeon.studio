@@ -5,6 +5,7 @@ module Auth0.Algebra
 , authorize
 , getSession
 , getWebAuth
+, isAuthenticated
 , parseHash
 , setSession
 ) where
