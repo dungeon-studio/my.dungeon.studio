@@ -20,7 +20,7 @@ auth0Config = Auth0Config
   , responseType: "token id_token"
   , audience: "https://alunduil.auth0.com/userinfo"
   , scope: "openid"
-  , redirectUri: "http://localhost:5000"
+  , redirectUri: "https://awesome-saha-4147fc.netlify.com"
   }
 
 main :: Eff ( HA.HalogenEffects ( auth0 :: AUTH0EFF, dom :: DOM, storage :: STORAGE, now :: NOW ) ) Unit
