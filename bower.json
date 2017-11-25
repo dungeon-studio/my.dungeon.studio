@@ -13,6 +13,8 @@
     "purescript-halogen": "^3.0.1",
     "purescript-http-methods": "^3.0.0",
     "purescript-localstorage": "^4.0.0",
-    "purescript-run": "^1.0.1"
+    "purescript-run": "^1.0.1",
+    "purescript-debug": "^3.0.0",
+    "purescript-now": "^3.0.0"
   }
 }
