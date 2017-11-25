@@ -2,7 +2,7 @@ module Auth0
 ( AUTH0EFF
 , Auth0Config(..)
 , LSKey(..)
-, Session
+, Session(..)
 , WebAuth
 , authorize
 , parseHash
@@ -25,15 +25,14 @@ foreign import _parseHash :: forall eff. WebAuth -> EffFnAff ( auth0 :: AUTH0EFF
 parseHash :: forall eff. WebAuth -> Aff ( auth0 :: AUTH0EFF | eff ) Session
 parseHash = fromEffFnAff <<< _parseHash
 
-newtype Session = Session
-  { access_token :: String
-  , id_token :: String
-  , expires_at :: String
-  }
-
-derive instance genericSession :: Generic Session
-
 data LSKey a = SessionKey
+newtype Session = Session
+  { accessToken :: String
+  , idToken :: String
+  , expiresAt :: Number
+  , expiresIn :: Number
+  }
+derive instance genericSession :: Generic Session
 derive instance genericLSKey :: Generic (LSKey a)
 
 sessionKey :: LSKey Session
