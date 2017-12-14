@@ -48,6 +48,7 @@ attribution; please, add yourself to the `COPYRIGHT` file.
 [docker]: https://docs.docker.com/
 [git flow]: http://nvie.com/posts/a-successful-git-branching-model/
 [issues]: https://github.com/velveteer/my.dungeon.studio/issues
+[npm]: https://www.npmjs.com/
 [pscid]: https://github.com/kRITZCREEK/pscid
 [purescript-halogen]: https://github.com/slamdata/purescript-halogen
 [purescript-run]: https://github.com/natefaubion/purescript-run
