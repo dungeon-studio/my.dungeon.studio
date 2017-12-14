@@ -1,57 +1,54 @@
-# dungeon.studio-ui
+# Description
 
-UI for dungeon.studio. 
+UI for dungeon.studio
 
-Built using [purescript-halogen](https://github.com/slamdata/purescript-halogen) with [purescript-run](https://github.com/natefaubion/purescript-run) for extensible effects.
+# Getting Started
 
-## Prerequisites
+The UI is available at <https://my.dungeon.studio>.
 
-Install bower if not already installed (it's used for Purescript package management).
+This project uses [purescript-halogen] with [purescript-run] for extensible effects.
 
-``` shell
-npm install --global bower
-```
+## Locally with [`docker-compose`][docker-compose]
 
-## Getting started
-
-``` shell
-npm install
-```
-
-## Environment
-
-For development you will need a local `.env` file with the following variables defined:
+This project is setup to run with [`docker-compose`][docker-compose].  Running
+the folliwng command will build a [docker] image, and start all requisite
+services as [docker] containers.
 
 ```bash
-AUTH0_REDIRECT_URI=http://localhost:5000
-AUTH0_AUDIENCE=https://alunduil.auth0.com/userinfo
-AUTH0_CLIENT_ID=qCOuPm76SHhtqUY1dA29TWL4CGt0VJNU
-AUTH0_SCOPE=openid
-AUTH0_DOMAIN=alunduil.auth0.com
+docker-compose up -d
 ```
 
-## Building
+## Locally with [`npm`][npm]
 
-``` shell
+This project utilizes [`npm`][npm] and local builds can use the following setup:
+
+```bash
+npm install --global bower # required for purescript
+npm install
 npm run build
 ```
 
-You can also use the command:
+# Reporting Issues
 
-``` shell
-npm run watch
-```
+Any issues discovered should be recorded on [github][issues].  If you believe
+you've found an error or have a suggestion for a new feature; please, ensure
+that it is reported.
 
-To start a process that will watch the source files and trigger a reload whenever they are modified. Alternatively...
+If you would like to contribute a fix or new feature; please, submit a pull
+request.  This project follows [git flow] and utilizes [travis] to automatically
+check pull requests before a manual review.
 
-## Fast watching with `purs ide`
+# Contributors
 
-If you're using an editor that supports `purs ide` or running [`pscid`](https://github.com/kRITZCREEK/pscid) there's an option for getting near-instant builds of the app while you work on it:
+The `COPYRIGHT` file contains a list of contributors with their respective
+copyrights and other information.  If you submit a pull request and would like
+attribution; please, add yourself to the `COPYRIGHT` file.
 
-``` shell
-npm run watch-fast
-```
-
-This will start a watch process that uses [Webpack](https://github.com/webpack/webpack) to rebundle the app whenever the _output_ files are changed. Since `purs ide` rebuilds modules on save, this means you can use this much faster bundle-only rebuild script.
-
-:warning: `purs ide` only rebuilds one module at a time, so sometimes the bundle will end up in an inconsistent state, resulting in runtime errors. This occurs when a change is made in one module that breaks other modules that depend on it. The solution is to run a full build when a change like this is made, as the compiler will force you to resolve those errors.
+[docker-compose]: https://docs.docker.com/compose/
+[docker]: https://docs.docker.com/
+[git flow]: http://nvie.com/posts/a-successful-git-branching-model/
+[issues]: https://github.com/velveteer/my.dungeon.studio/issues
+[pscid]: https://github.com/kRITZCREEK/pscid
+[purescript-halogen]: https://github.com/slamdata/purescript-halogen
+[purescript-run]: https://github.com/natefaubion/purescript-run
+[travis]: https://travis-ci.org/velveteer/my.dungeon.studio
