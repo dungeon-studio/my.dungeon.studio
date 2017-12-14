@@ -1,7 +1,11 @@
-/.*
-!/.gitignore
-!/.travis.yml
-/bower_components/
-/node_modules/
-/output/
-/dist/app.js
+### PureScript ###
+# Dependencies
+.psci_modules
+bower_components
+node_modules
+
+# Generated files
+.psci
+output
+
+# TODO ignore dist?  See issue #4.
