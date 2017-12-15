@@ -6,6 +6,7 @@
     "watch-fast": "webpack --config webpack.config.js"
   },
   "devDependencies": {
+    "bower": "^1.8.2",
     "browserify": "^14.5.0",
     "dotenv": "^4.0.0",
     "dotenv-webpack": "^1.5.4",

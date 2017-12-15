@@ -23,7 +23,6 @@ docker-compose up -d
 This project utilizes [`npm`][npm] and local builds can use the following setup:
 
 ```bash
-npm install --global bower # required for purescript
 npm install
 npm run build
 ```
