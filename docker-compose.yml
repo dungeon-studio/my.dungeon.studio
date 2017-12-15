@@ -13,7 +13,7 @@ services:
     networks:
       - dungeon-studio
     ports:
-      - "5000:5000"
+      - "5000:80"
 
   api.dungeon.studio:
     environment:
