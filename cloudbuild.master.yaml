@@ -1,0 +1,7 @@
+steps:
+  - name: 'node:8.9'
+    args: [ 'npm', 'install' ]
+  - name: 'node:8.9'
+    args: [ 'npm', 'run', 'build' ]
+  - name: 'gcr.io/cloud-builders/gsutil'
+    args: [ '-m', 'rsync', '-r', '-d', 'dist/', 'gs://my.dungeon.studio/' ]
