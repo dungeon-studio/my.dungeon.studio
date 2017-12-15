@@ -1,0 +1,49 @@
+version: "3"
+
+services:
+  my.dungeon.studio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - ./.env
+    image: dungeon-studio/my.dungeon.studio:latest
+    links:
+      - api.dungeon.studio:api.dungeon.studio
+    networks:
+      - dungeon-studio
+    ports:
+      - "5000:80"
+
+  api.dungeon.studio:
+    environment:
+      - BOLT_HOST=neo4j
+      - BOLT_PORT=7687
+      - DUNGEON_STUDIO_PORT=80
+      - EARTHDAWN_DISCIPLINES_URI=http://d.collection.dungeon.studio/earthdawn/4e/disciplines
+      - EARTHDAWN_RACES_URI=http://d.collection.dungeon.studio/earthdawn/4e/races
+      - JWT_AUDIENCE=https://d.api.dungeon.studio
+      - JWT_ISSUER=https://alunduil.auth0.com/
+      - JWT_JWKS_URI=https://alunduil.auth0.com/.well-known/jwks.json
+    image: gcr.io/dungeon-studio/api.dungeon.studio:develop
+    links:
+      - neo4j:neo4j
+    networks:
+      - dungeon-studio
+    ports:
+      - "80"
+
+  neo4j:
+    environment:
+      - NEO4J_AUTH=none
+    image: neo4j:3.2
+    logging:
+      driver: none
+    networks:
+      - dungeon-studio
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+
+networks:
+  dungeon-studio:

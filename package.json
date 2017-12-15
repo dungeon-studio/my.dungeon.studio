@@ -1,7 +1,7 @@
 {
   "private": true,
   "scripts": {
-    "postinstall": "bower install",
+    "postinstall": "bower --allow-root install",
     "build": "pulp build --to output/index.js && node build.js",
     "watch-fast": "webpack --config webpack.config.js"
   },
