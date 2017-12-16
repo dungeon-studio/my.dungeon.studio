@@ -8,4 +8,4 @@ node_modules
 .psci
 output
 
-# TODO ignore dist?  See issue #4.
+dist
