@@ -1,6 +1,6 @@
 steps:
   - name: 'node:8.9'
-    args: [ 'npm', 'install' ]
+    args: [ 'npm', 'install', '--unsafe-perm' ]
   - name: 'node:8.9'
     args: [ 'npm', 'run', 'build' ]
   - name: 'gcr.io/cloud-builders/gsutil'
