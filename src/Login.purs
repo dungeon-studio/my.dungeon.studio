@@ -23,7 +23,7 @@ type State = Unit
 type Monad = Run ( auth0 :: AUTH0 )
 
 buttonClass :: HH.ClassName
-buttonClass = HH.ClassName "f6 pointer near-white bg-animate bg-near-black hover-bg-gray tc pa2 ph3 pv1 ttu tracked"
+buttonClass = HH.ClassName "f6 pointer near-white bg-animate bg-near-black hover-bg-gray tc ph4 pv2 ttu tracked"
 
 component :: H.Component HH.HTML Query Input Output Monad
 component =
@@ -36,11 +36,15 @@ component =
   where
 
   render :: State -> H.ComponentHTML Query
-  render _ = HH.div
-    [ HP.class_ $ HH.ClassName "flex pa3" ]
-    [ HH.button
-      [ HP.class_ buttonClass, HE.onClick (HE.input_ Login) ]
-      [ HH.text "Login" ]
+  render _ = HH.div [ HP.class_ $ HH.ClassName "dt vh-100 w-100" ]
+    [ HH.div
+        [ HP.class_ $ HH.ClassName "dtc v-mid tc white ph3 ph4-l" ]
+        [
+          HH.div [ HP.class_ $ HH.ClassName "f4 fw2 tracked ttu mb4" ] [ HH.text "Dungeon Studio" ]
+        , HH.button
+            [ HP.class_ buttonClass, HE.onClick (HE.input_ Login) ]
+            [ HH.text "Login/Sign up" ]
+        ]
     ]
 
   eval :: Query ~> H.ComponentDSL State Query Output Monad
