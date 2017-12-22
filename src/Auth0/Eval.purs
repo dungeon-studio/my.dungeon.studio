@@ -16,7 +16,7 @@ import DOM (DOM)
 import DOM.HTML (window)
 import DOM.HTML.Location as Location
 import DOM.HTML.Window as Window
-import DOM.WebStorage (STORAGE, getItem, setItem, getLocalStorage)
+import DOM.WebStorage (STORAGE, getItem, removeItem, setItem, getLocalStorage)
 import Run (Run, interpret)
 
 import Auth0 (WebAuth, AUTH0EFF, Session(..), authorize, parseHash, sessionKey)
@@ -38,6 +38,12 @@ handleAuth0 wa (Ask a) = pure (a wa)
 
 handleAuth0 wa (Authorize a) = do
   liftEff $ authorize wa
+  pure a
+
+handleAuth0 wa (Logout a) = do
+  ls <- liftEff getLocalStorage
+  liftEff $ removeItem ls sessionKey
+  liftEff $ window >>= Window.location >>= Location.reload
   pure a
 
 handleAuth0 wa (GetSession a) = do

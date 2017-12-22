@@ -2,19 +2,15 @@
   "private": true,
   "scripts": {
     "postinstall": "bower --allow-root install",
-    "build": "pulp build --to output/index.js && node build.js",
+    "build": "pulp browserify --to dist/app.js",
+    "watch": "pulp -w browserify --to dist/app.js",
     "watch-fast": "webpack --config webpack.config.js"
   },
   "devDependencies": {
     "bower": "^1.8.2",
-    "browserify": "^14.5.0",
-    "dotenv": "^4.0.0",
-    "dotenv-webpack": "^1.5.4",
-    "envify": "^4.1.0",
     "pulp": "^12.0.1",
     "purescript": "^0.11.7",
     "purescript-psa": "^0.5.1",
-    "uglifyify": "^4.0.5",
     "webpack": "^3.6.0"
   },
   "dependencies": {

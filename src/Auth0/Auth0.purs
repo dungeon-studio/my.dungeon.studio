@@ -1,6 +1,6 @@
 module Auth0
 ( AUTH0EFF
-, Auth0Config(..)
+, Auth0Config
 , LSKey(..)
 , Session(..)
 , WebAuth
@@ -29,7 +29,6 @@ parseHash = fromEffFnAff <<< _parseHash Just Nothing
 data LSKey a = SessionKey
 newtype Session = Session
   { accessToken :: String
-  , idToken :: String
   , expiresAt :: Number
   , expiresIn :: Number
   }
@@ -39,11 +38,9 @@ derive instance genericLSKey :: Generic (LSKey a)
 sessionKey :: LSKey Session
 sessionKey = SessionKey
 
-newtype Auth0Config = Auth0Config
-  { domain :: String
-  , clientID :: String
-  , responseType :: String
-  , audience :: String
-  , scope :: String
+type Auth0Config =
+  { clientID :: String
+  , domain :: String
   , redirectUri :: String
+  , responseType :: String
   }
