@@ -6,6 +6,7 @@ module Auth0.Algebra
 , getSession
 , getWebAuth
 , isAuthenticated
+, logout
 , parseHash
 , setSession
 ) where
@@ -20,6 +21,7 @@ import Data.Variant.Internal (FProxy)
 data Auth0DSLF a
   = Ask (WebAuth -> a)
   | Authorize a
+  | Logout a
   | GetSession ((Maybe Session) -> a)
   | SetSession Session a
   | ParseHash ((Maybe Session) -> a)
@@ -47,3 +49,6 @@ parseHash = lift _auth0 (ParseHash id)
 
 isAuthenticated :: forall r. Run (auth0 :: AUTH0 | r) Boolean
 isAuthenticated = lift _auth0 (CheckAuth id)
+
+logout :: forall r. Run (auth0 :: AUTH0 | r) Unit
+logout = lift _auth0 (Logout unit)

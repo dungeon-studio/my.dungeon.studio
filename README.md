@@ -11,7 +11,7 @@ This project uses [purescript-halogen] with [purescript-run] for extensible effe
 ## Locally with [`docker-compose`][docker-compose]
 
 This project is setup to run with [`docker-compose`][docker-compose].  Running
-the folliwng command will build a [docker] image, and start all requisite
+the following command will build a [docker] image, and start all requisite
 services as [docker] containers.
 
 ```bash
