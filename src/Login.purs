@@ -15,6 +15,7 @@ import Halogen.HTML.Properties as HP
 import Run (Run)
 
 import Auth0.Algebra (AUTH0, authorize)
+import Assets (getImgSrc)
 
 data Query a = Login a
 type Input = Unit
@@ -23,7 +24,7 @@ type State = Unit
 type Monad = Run ( auth0 :: AUTH0 )
 
 buttonClass :: HH.ClassName
-buttonClass = HH.ClassName "f6 pointer near-white bg-animate bg-near-black hover-bg-gray tc ph4 pv2 ttu tracked"
+buttonClass = HH.ClassName "f6 pointer white bg-animate bg-dark-gray hover-bg-gray tc bn ph3 mb3 pv2 ttu tracked"
 
 component :: H.Component HH.HTML Query Input Output Monad
 component =
@@ -40,10 +41,15 @@ component =
     [ HH.div
         [ HP.class_ $ HH.ClassName "dtc v-mid tc white ph3 ph4-l" ]
         [
-          HH.div [ HP.class_ $ HH.ClassName "f4 fw2 tracked ttu mb4" ] [ HH.text "Dungeon Studio" ]
+          HH.img [ HP.class_ $ HH.ClassName "pa3 mw3 hover dim", HP.src $ getImgSrc "logo-splash.svg" ]
+        , HH.div [ HP.class_ $ HH.ClassName "f4 fw2 tracked ttu mb4 lh-title" ]
+          [
+            HH.span [ HP.class_ $ HH.ClassName "fw4" ] [ HH.text "Dungeon" ]
+          , HH.span [ HP.class_ $ HH.ClassName "fw1" ] [ HH.text " Studio" ]
+          ]
         , HH.button
             [ HP.class_ buttonClass, HE.onClick (HE.input_ Login) ]
-            [ HH.text "Login/Sign up" ]
+            [ HH.text "Login" ]
         ]
     ]
 
