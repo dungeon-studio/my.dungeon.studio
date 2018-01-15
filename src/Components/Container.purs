@@ -6,8 +6,9 @@ module Container
 
 import Prelude
 
-import Auth0.Algebra (AUTH0, isAuthenticated, logout, parseHash, setSession)
+import Auth0.Algebra (isAuthenticated, logout, parseHash, setSession)
 import Control.Monad.Aff (Aff, launchAff_)
+import Control.Monad.App (AppM)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Trans.Class (lift)
 import Data.Const (Const)
@@ -22,7 +23,6 @@ import Halogen.Component.ChildPath as CP
 import Login as Login
 import Routers as RT
 import Routing (matches)
-import Run (Run)
 
 data Query a = Init a | Logout a | ChangeRoute RT.Routes a
 data AuthStatus = Authenticated | NotAuthenticated | Loading
@@ -31,7 +31,7 @@ type Input = Unit
 type Output = Void
 type ChildQuery = Login.Query <\/> Const Void
 type ChildSlot = Unit \/ Void
-type Monad = Run ( auth0 :: AUTH0 )
+type Monad = AppM
 
 headerClass :: HH.ClassName
 headerClass = HH.ClassName "f6 lh-copy tl ttu tracked-mega sans-serif avenir white pa3"

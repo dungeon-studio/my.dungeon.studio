@@ -15,6 +15,7 @@ exports._parseHash = function (just) {
     return function (webAuth) {
       return function (onError, onSuccess) {
         var req = webAuth.parseHash(function (err, auth) {
+          console.log(auth);
           if (err) {
             return onError(err);
           }

@@ -5,6 +5,7 @@ module Login
 
 import Prelude
 
+import Control.Monad.App (AppM)
 import Control.Monad.Trans.Class (lift)
 import Data.Maybe (Maybe(..))
 
@@ -12,16 +13,15 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import Run (Run)
 
-import Auth0.Algebra (AUTH0, authorize)
+import Auth0.Algebra (authorize)
 import Assets (getImgSrc)
 
 data Query a = Login a
 type Input = Unit
 type Output = Void
 type State = Unit
-type Monad = Run ( auth0 :: AUTH0 )
+type Monad = AppM
 
 buttonClass :: HH.ClassName
 buttonClass = HH.ClassName "f6 pointer white bg-animate bg-dark-gray hover-bg-gray tc bn ph3 mb3 pv2 ttu tracked"
