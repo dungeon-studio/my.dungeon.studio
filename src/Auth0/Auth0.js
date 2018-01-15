@@ -15,14 +15,12 @@ exports._parseHash = function (just) {
     return function (webAuth) {
       return function (onError, onSuccess) {
         var req = webAuth.parseHash(function (err, auth) {
-          console.log(auth);
           if (err) {
             return onError(err);
           }
           if (!auth) {
             return onSuccess(nothing);
           }
-          console.log(auth);
           return onSuccess(just(auth));
         });
         // Return a canceler, which is just another Aff effect.

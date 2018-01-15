@@ -1,5 +1,6 @@
 module Client.Eval
 ( handleClient
+, runClient
 ) where
 
 import Prelude
@@ -11,31 +12,40 @@ import Data.Maybe (Maybe(..))
 import Data.HTTP.Method (Method(..))
 import Network.HTTP.Affjax (affjax, defaultRequest)
 import Network.HTTP.RequestHeader (RequestHeader(..))
-import Run (Run, AFF, EFF, liftAff, liftEff)
+import Optic.Getter ((^.))
+import Run (Run, AFF, EFF, interpret, liftAff, liftEff, on, send)
+import Run.Reader (READER, ask)
 
 import Auth0 (Session(..))
 import Auth0.Algebra (AUTH0, getSession)
-import Client.Algebra (ClientDSLF(..), Resource(..))
+import Client.Algebra (ClientDSLF(..), CLIENT, Resource(..), _client)
+import Env (apiHost)
+import State (State)
+
+runClient
+  :: Run ( client :: CLIENT, auth0 :: AUTH0, aff :: AFF AppEffects, eff :: EFF AppEffects, reader :: READER State )
+  ~> Run ( auth0 :: AUTH0, reader :: READER State, aff :: AFF AppEffects, eff :: EFF AppEffects )
+runClient = interpret (on _client handleClient send)
 
 handleClient
   :: forall r
    . ClientDSLF
-  ~> Run ( auth0 :: AUTH0, aff :: AFF AppEffects, eff :: EFF AppEffects | r )
+  ~> Run ( auth0 :: AUTH0, reader :: READER State, aff :: AFF AppEffects, eff :: EFF AppEffects | r )
 handleClient (Log s a) = do
   liftEff $ log s
   pure a
 
 handleClient (Get AllCharacters a) = do
+  st <- ask
   session <- getSession
   case session of
     Nothing -> pure (a Nothing)
     Just (Session s) -> do
-      liftEff $ log $ s.accessToken
       res <- liftAff $ attempt $ affjax $ defaultRequest
-        { url = "http://r.api.dungeon.studio/characters"
+        { url = "http://" <> st.env ^. apiHost <> "/characters"
         , method = Left GET
         , headers = [ RequestHeader "Accept" "application/vnd.siren+json"
-                    , RequestHeader "Bearer" s.accessToken
+                    , RequestHeader "Authorization" $ "Bearer " <> s.accessToken
                     ]
         }
       case res of

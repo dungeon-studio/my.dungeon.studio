@@ -6,7 +6,7 @@ module Container
 
 import Prelude
 
-import Auth0.Algebra (isAuthenticated, logout, parseHash, setSession)
+import Auth0.Algebra as Auth0
 import Control.Monad.Aff (Aff, launchAff_)
 import Control.Monad.App (AppM)
 import Control.Monad.Eff (Eff)
@@ -83,25 +83,20 @@ component =
   eval :: Query ~> H.ParentDSL State Query ChildQuery ChildSlot Output Monad
   eval = case _ of
     Init next -> do
-      ms <- lift $ parseHash
+      ms <- lift $ Auth0.parseHash -- TODO: Move this into a separate component
       case ms of
         Just session -> do
-          lift $ setSession session
+          lift $ Auth0.setSession session
           pure next
         Nothing -> do
-          isLoggedIn <- lift $ isAuthenticated
-          if isLoggedIn
-            then do
-              H.modify \st -> st{ auth = Authenticated }
-              pure next
-            else do
-              H.modify \st -> st{ auth = NotAuthenticated }
-              pure next
+          isLoggedIn <- lift $ Auth0.isAuthenticated
+          H.modify _{ auth = if isLoggedIn then Authenticated else NotAuthenticated }
+          pure next
     ChangeRoute route next -> do
       H.modify \st -> st{ route = route }
       pure next
     Logout next -> do
-      lift $ logout $> next
+      lift $ Auth0.logout $> next
 
   initializer = Just $ H.action Init
   finalizer = Nothing
