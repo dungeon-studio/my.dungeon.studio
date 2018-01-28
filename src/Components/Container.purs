@@ -7,18 +7,19 @@ module Container
 import Prelude
 
 import Auth0.Algebra as Auth0
+import Characters as Characters
 import Control.Monad.Aff (Aff, launchAff_)
 import Control.Monad.App (AppM)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Trans.Class (lift)
-import Data.Const (Const)
 import Data.Maybe (Maybe(..))
+import Data.Either.Nested (Either2)
+import Data.Functor.Coproduct.Nested (Coproduct2)
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.HTML.Events as HE
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
-import Halogen.Component.ChildPath (type (\/), type (<\/>))
 import Halogen.Component.ChildPath as CP
 import Login as Login
 import Routers as RT
@@ -29,8 +30,8 @@ data AuthStatus = Authenticated | NotAuthenticated | Loading
 type State = { auth :: AuthStatus, route :: RT.Routes }
 type Input = Unit
 type Output = Void
-type ChildQuery = Login.Query <\/> Const Void
-type ChildSlot = Unit \/ Void
+type ChildQuery = Coproduct2 Login.Query Characters.Query
+type ChildSlot = Either2 Unit Unit
 type Monad = AppM
 
 headerClass :: HH.ClassName
@@ -52,7 +53,7 @@ component =
   where
 
   initialState :: State
-  initialState = { auth: Loading, route: RT.Home }
+  initialState = { auth: Loading, route: RT.Characters }
 
   render :: State -> H.ParentHTML Query ChildQuery ChildSlot Monad
   render st = HH.div [ HP.class_ $ HH.ClassName "w-100 vh-100" ]
@@ -69,7 +70,7 @@ component =
       [
         HH.a
           [ HP.class_ $ HH.ClassName "link dim white dib mr3", HP.href "#/" ]
-          [ HH.text "Home" ]
+          [ HH.text "Characters" ]
       , HH.a
           [ HP.class_ $ HH.ClassName "link fr dim white dib", HP.href "#", HE.onClick (HE.input_ Logout) ]
           [ HH.text "Logout" ]
@@ -77,8 +78,7 @@ component =
     ]
 
   content st = case st.route of
-    RT.Home -> HH.div_ []
-    _ -> HH.div_ []
+    RT.Characters -> HH.slot' CP.cp2 unit Characters.component unit absurd
 
   eval :: Query ~> H.ParentDSL State Query ChildQuery ChildSlot Output Monad
   eval = case _ of

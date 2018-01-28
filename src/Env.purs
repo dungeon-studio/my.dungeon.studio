@@ -2,9 +2,8 @@ module Env
 ( Env
 , env
 , getEnv
-, auth0Audience
 , apiHost
-, collectionHost
+, auth0Audience
 ) where
 
 import Prelude
@@ -21,7 +20,6 @@ import Simple.JSON (class ReadForeign, read)
 newtype Env = Env
   { auth0Audience :: String
   , apiHost :: String
-  , collectionHost :: String
   }
 
 derive instance ntE :: Newtype Env _
@@ -43,6 +41,3 @@ auth0Audience = lens (\(Env x) -> x.auth0Audience) (\(Env x) v -> Env x { auth0A
 
 apiHost :: Lens' Env String
 apiHost = lens (\(Env x) -> x.apiHost) (\(Env x) v -> Env x { apiHost = v })
-
-collectionHost :: Lens' Env String
-collectionHost = lens (\(Env x) -> x.collectionHost) (\(Env x) v -> Env x { collectionHost = v })

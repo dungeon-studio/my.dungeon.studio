@@ -32,8 +32,7 @@ handleClient
    . ClientDSLF
   ~> Run ( auth0 :: AUTH0, reader :: READER State, aff :: AFF AppEffects, eff :: EFF AppEffects | r )
 handleClient (Log s a) = do
-  liftEff $ log s
-  pure a
+  liftEff $ log s $> a
 
 handleClient (Get AllCharacters a) = do
   st <- ask
