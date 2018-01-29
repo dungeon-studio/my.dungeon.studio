@@ -4,7 +4,6 @@ module Auth0.Algebra
 , _auth0
 , authorize
 , getSession
-, getWebAuth
 , isAuthenticated
 , logout
 , parseHash
@@ -13,14 +12,13 @@ module Auth0.Algebra
 
 import Prelude
 import Run (Run, lift)
-import Auth0 (Session, WebAuth)
+import Auth0 (Session)
 import Data.Maybe (Maybe)
 import Data.Symbol (SProxy(..))
 import Data.Variant.Internal (FProxy)
 
 data Auth0DSLF a
-  = Ask (WebAuth -> a)
-  | Authorize a
+  = Authorize a
   | Logout a
   | GetSession ((Maybe Session) -> a)
   | SetSession Session a
@@ -31,9 +29,6 @@ derive instance auth0Functor :: Functor Auth0DSLF
 type AUTH0 = FProxy Auth0DSLF
 
 _auth0 = SProxy :: SProxy "auth0"
-
-getWebAuth :: forall r. Run (auth0 :: AUTH0 | r) WebAuth
-getWebAuth = lift _auth0 (Ask id)
 
 authorize :: forall r. Run (auth0 :: AUTH0 | r) Unit
 authorize = lift _auth0 (Authorize unit)

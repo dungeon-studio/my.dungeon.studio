@@ -6,32 +6,33 @@ module Container
 
 import Prelude
 
-import Auth0.Algebra (AUTH0, isAuthenticated, logout, parseHash, setSession)
+import Auth0.Algebra as Auth0
+import Characters as Characters
 import Control.Monad.Aff (Aff, launchAff_)
+import Control.Monad.App (AppM)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Trans.Class (lift)
-import Data.Const (Const)
 import Data.Maybe (Maybe(..))
+import Data.Either.Nested (Either2)
+import Data.Functor.Coproduct.Nested (Coproduct2)
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.HTML.Events as HE
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
-import Halogen.Component.ChildPath (type (\/), type (<\/>))
 import Halogen.Component.ChildPath as CP
 import Login as Login
 import Routers as RT
 import Routing (matches)
-import Run (Run)
 
 data Query a = Init a | Logout a | ChangeRoute RT.Routes a
 data AuthStatus = Authenticated | NotAuthenticated | Loading
 type State = { auth :: AuthStatus, route :: RT.Routes }
 type Input = Unit
 type Output = Void
-type ChildQuery = Login.Query <\/> Const Void
-type ChildSlot = Unit \/ Void
-type Monad = Run ( auth0 :: AUTH0 )
+type ChildQuery = Coproduct2 Login.Query Characters.Query
+type ChildSlot = Either2 Unit Unit
+type Monad = AppM
 
 headerClass :: HH.ClassName
 headerClass = HH.ClassName "f6 lh-copy tl ttu tracked-mega sans-serif avenir white pa3"
@@ -52,7 +53,7 @@ component =
   where
 
   initialState :: State
-  initialState = { auth: Loading, route: RT.Home }
+  initialState = { auth: Loading, route: RT.Characters }
 
   render :: State -> H.ParentHTML Query ChildQuery ChildSlot Monad
   render st = HH.div [ HP.class_ $ HH.ClassName "w-100 vh-100" ]
@@ -69,7 +70,7 @@ component =
       [
         HH.a
           [ HP.class_ $ HH.ClassName "link dim white dib mr3", HP.href "#/" ]
-          [ HH.text "Home" ]
+          [ HH.text "Characters" ]
       , HH.a
           [ HP.class_ $ HH.ClassName "link fr dim white dib", HP.href "#", HE.onClick (HE.input_ Logout) ]
           [ HH.text "Logout" ]
@@ -77,31 +78,25 @@ component =
     ]
 
   content st = case st.route of
-    RT.Home -> HH.div_ []
-    _ -> HH.div_ []
+    RT.Characters -> HH.slot' CP.cp2 unit Characters.component unit absurd
 
   eval :: Query ~> H.ParentDSL State Query ChildQuery ChildSlot Output Monad
   eval = case _ of
     Init next -> do
-      ms <- lift $ parseHash
+      ms <- lift $ Auth0.parseHash -- TODO: Move this into a separate component
       case ms of
         Just session -> do
-          lift $ setSession session
+          lift $ Auth0.setSession session
           pure next
         Nothing -> do
-          isLoggedIn <- lift $ isAuthenticated
-          if isLoggedIn
-            then do
-              H.modify \st -> st{ auth = Authenticated }
-              pure next
-            else do
-              H.modify \st -> st{ auth = NotAuthenticated }
-              pure next
+          isLoggedIn <- lift $ Auth0.isAuthenticated
+          H.modify _{ auth = if isLoggedIn then Authenticated else NotAuthenticated }
+          pure next
     ChangeRoute route next -> do
       H.modify \st -> st{ route = route }
       pure next
     Logout next -> do
-      lift $ logout $> next
+      lift $ Auth0.logout $> next
 
   initializer = Just $ H.action Init
   finalizer = Nothing

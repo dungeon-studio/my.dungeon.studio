@@ -2,6 +2,9 @@ steps:
   - name: 'node:8.9'
     args: [ 'npm', 'install', '--unsafe-perm' ]
   - name: 'node:8.9'
+    env:
+      - 'AUTH0_AUDIENCE=https://r.api.dungeon.studio'
+      - 'API_HOST=r.api.dungeon.studio'
     args: [ 'npm', 'run', 'build' ]
   - name: 'gcr.io/cloud-builders/gsutil'
     args: [ '-m', 'rsync', '-r', '-d', 'dist/', 'gs://r.my.dungeon.studio/' ]

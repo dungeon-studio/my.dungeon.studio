@@ -1,19 +1,16 @@
 module Routers where
 
-import Control.Alt ((<$), (<|>))
-import Prelude (class Show, (*>))
+import Control.Alt ((<$))
+import Prelude (class Show)
 import Routing.Match (Match)
 import Routing.Match.Class (lit)
 
-data Routes = Home | About
+data Routes = Characters
 
 instance showRoutes :: Show Routes where
-  show Home = "Home"
-  show About = "About"
+  show Characters = "Characters"
 
 routing :: Match Routes
-routing = about <|> home
+routing = characters
   where
-    home = Home <$ lit ""
-    about = About <$ route "about"
-    route str = lit "" *> lit str
+    characters = Characters <$ lit ""

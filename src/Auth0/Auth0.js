@@ -21,7 +21,6 @@ exports._parseHash = function (just) {
           if (!auth) {
             return onSuccess(nothing);
           }
-          console.log(auth);
           return onSuccess(just(auth));
         });
         // Return a canceler, which is just another Aff effect.

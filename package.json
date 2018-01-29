@@ -2,16 +2,21 @@
   "private": true,
   "scripts": {
     "postinstall": "bower --allow-root install",
-    "build": "pulp browserify --to dist/app.js",
-    "watch": "pulp -w browserify --to dist/app.js",
+    "build": "pulp build --to output/index.js && npm run envify",
+    "envify": "node scripts/envify.js",
+    "watch": "pulp -w build --then 'npm run envify' --to output/index.js",
     "watch-fast": "webpack --config webpack.config.js"
   },
   "devDependencies": {
     "bower": "^1.8.2",
+    "browserify": "^15.2.0",
+    "dotenv": "^4.0.0",
+    "dotenv-webpack": "^1.5.4",
+    "envify": "^4.1.0",
     "pulp": "^12.0.1",
     "purescript": "^0.11.7",
     "purescript-psa": "^0.5.1",
-    "webpack": "^3.6.0"
+    "webpack": "^3.10.0"
   },
   "dependencies": {
     "auth0-js": "^9.0.2"
