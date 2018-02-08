@@ -1,4 +1,4 @@
-module Login
+module Components.Login
 ( Query
 , component
 ) where

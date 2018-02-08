@@ -4,51 +4,80 @@ module Client.Eval
 ) where
 
 import Prelude
-import Control.Monad.App (AppEffects)
-import Control.Monad.Aff (attempt)
-import Control.Monad.Eff.Console (log)
-import Data.Either (Either(..))
-import Data.Maybe (Maybe(..))
-import Data.HTTP.Method (Method(..))
-import Network.HTTP.Affjax (affjax, defaultRequest)
-import Network.HTTP.RequestHeader (RequestHeader(..))
-import Optic.Getter ((^.))
-import Run (Run, AFF, EFF, interpret, liftAff, liftEff, on, send)
-import Run.Reader (READER, ask)
-
 import Auth0 (Session(..))
 import Auth0.Algebra (AUTH0, getSession)
-import Client.Algebra (ClientDSLF(..), CLIENT, Resource(..), _client)
-import Env (apiHost)
-import State (State)
+import Client.Algebra (ClientDSLF(..), CLIENT, _client)
+import Control.Monad.App (AppEffects)
+import Data.Either (Either(..), hush)
+import Data.Foreign (MultipleErrors)
+import Data.Maybe (Maybe(..))
+import Data.HTTP.Method (Method(..))
+import Debug.Trace (traceAnyA)
+import Env (Env(..))
+import Network.HTTP.Affjax (affjax, defaultRequest)
+import Network.HTTP.RequestHeader (RequestHeader(..))
+import Run (Run, AFF, EFF, interpret, liftAff, on, send)
+import Run.Reader (READER, ask)
+import Simple.JSON (class ReadForeign, readJSON, writeJSON)
+import Siren.Types (Entity)
 
 runClient
-  :: Run ( client :: CLIENT, auth0 :: AUTH0, aff :: AFF AppEffects, eff :: EFF AppEffects, reader :: READER State )
-  ~> Run ( auth0 :: AUTH0, reader :: READER State, aff :: AFF AppEffects, eff :: EFF AppEffects )
+  :: Run ( client :: CLIENT
+         , auth0 :: AUTH0
+         , aff :: AFF AppEffects
+         , eff :: EFF AppEffects
+         , reader :: READER Env
+         )
+  ~> Run ( auth0 :: AUTH0
+         , reader :: READER Env
+         , aff :: AFF AppEffects
+         , eff :: EFF AppEffects
+         )
 runClient = interpret (on _client handleClient send)
 
 handleClient
   :: forall r
    . ClientDSLF
-  ~> Run ( auth0 :: AUTH0, reader :: READER State, aff :: AFF AppEffects, eff :: EFF AppEffects | r )
-handleClient (Log s a) = do
-  liftEff $ log s $> a
+  ~> Run ( auth0 :: AUTH0
+         , reader :: READER Env
+         , aff :: AFF AppEffects
+         , eff :: EFF AppEffects
+         | r
+         )
 
-handleClient (Get AllCharacters a) = do
-  st <- ask
+handleClient (MakeCharacter c a) = do
+  traceAnyA $ writeJSON c
+  (Env env) <- ask
   session <- getSession
   case session of
     Nothing -> pure (a Nothing)
     Just (Session s) -> do
-      res <- liftAff $ attempt $ affjax $ defaultRequest
-        { url = "http://" <> st.env ^. apiHost <> "/characters"
-        , method = Left GET
-        , headers = [ RequestHeader "Accept" "application/vnd.siren+json"
-                    , RequestHeader "Authorization" $ "Bearer " <> s.accessToken
+      res <- liftAff $ affjax $ defaultRequest
+        { url = "http://" <> env.apiHost <> "/characters"
+        , method = Left POST
+        , content = Just $ writeJSON c
+        , headers = [ RequestHeader "Authorization" $ "Bearer " <> s.accessToken
+                    , RequestHeader "Content-Type" "application/json"
                     ]
         }
-      case res of
-        Left err -> do
-            liftEff $ log $ show err
-            pure (a Nothing)
-        Right res' -> pure (a (Just res'))
+      traceAnyA $ (parse res.response) :: Either MultipleErrors Entity
+      pure $ a $ hush $ parse res.response
+
+handleClient (GetCharacters a) = do
+  (Env env) <- ask
+  session <- getSession
+  case session of
+    Nothing -> pure (a Nothing)
+    Just (Session s) -> do
+      res <- liftAff $ affjax $ defaultRequest
+        { url = "http://" <> env.apiHost <> "/characters"
+        , method = Left GET
+        , headers = [ RequestHeader "Authorization" $ "Bearer " <> s.accessToken
+                    , RequestHeader "Content-Type" "application/vnd.siren+json"
+                    ]
+        }
+      traceAnyA $ (parse res.response) :: Either MultipleErrors Entity
+      pure $ a $ hush $ parse res.response
+
+parse :: forall a. ReadForeign a => String -> Either MultipleErrors a
+parse = readJSON

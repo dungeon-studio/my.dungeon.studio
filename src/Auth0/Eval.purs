@@ -11,54 +11,67 @@ import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
 import Data.DateTime.Instant (unInstant)
 import Data.Time.Duration (Milliseconds(..))
-import Data.Newtype (unwrap)
+import Data.Newtype (unwrap, wrap)
 import DOM.HTML (window)
 import DOM.HTML.Location as Location
 import DOM.HTML.Window as Window
 import DOM.WebStorage (getItem, removeItem, setItem, getLocalStorage)
 import Run (Run, AFF, EFF, interpret, liftEff, liftAff, on, send)
-import Run.Reader (READER, ask)
+import Run.Reader (READER)
 
-import Auth0 (Session(..), authorize, parseHash, sessionKey)
+import Auth0 (Session(..), WebAuth, authorize, parseHash, sessionKey)
 import Auth0.Algebra (Auth0DSLF(..), AUTH0, _auth0)
-import State (State)
+import Env (Env)
 
 runAuth0
-  :: Run ( auth0 :: AUTH0, reader :: READER State, aff :: AFF AppEffects, eff :: EFF AppEffects )
-  ~> Run ( aff :: AFF AppEffects, eff :: EFF AppEffects, reader :: READER State )
-runAuth0 = interpret (on _auth0 handleAuth0 send)
+  :: WebAuth
+  -> Run ( auth0 :: AUTH0
+         , aff :: AFF AppEffects
+         , eff :: EFF AppEffects
+         , reader :: READER Env
+         )
+  ~> Run ( aff :: AFF AppEffects
+         , eff :: EFF AppEffects
+         , reader :: READER Env
+         )
+runAuth0 wa = interpret (on _auth0 (handleAuth0 wa) send)
 
 handleAuth0
   :: forall r
-   . Auth0DSLF
-  ~> Run ( aff :: AFF AppEffects, eff :: EFF AppEffects, reader :: READER State | r )
-handleAuth0 (Authorize a) = do
-  st <- ask
-  liftEff $ authorize st.webAuth
+   . WebAuth
+  -> Auth0DSLF
+  ~> Run ( aff :: AFF AppEffects
+         , eff :: EFF AppEffects
+         , reader :: READER Env
+         | r
+         )
+handleAuth0 wa (Authorize a) = do
+  liftEff $ authorize wa
   pure a
 
-handleAuth0 (Logout a) = do
+handleAuth0 wa (Logout a) = do
   ls <- liftEff getLocalStorage
   liftEff $ removeItem ls sessionKey
   liftEff $ window >>= Window.location >>= Location.reload
   pure a
 
-handleAuth0 (GetSession a) = do
+handleAuth0 wa (GetSession a) = do
   ls <- liftEff getLocalStorage
   session <- liftEff $ getItem ls sessionKey
   pure (a session)
 
-handleAuth0 (SetSession (Session session) a) = do
+handleAuth0 wa (SetSession (Session session) a) = do
   time <- liftEff now
-  let s = Session $ session{ expiresAt = unwrap $ (unInstant time) + (Milliseconds $ session.expiresIn * 1000.0) }
+  let ms = unInstant time
+      exp = Milliseconds $ session.expiresIn * 1000.0
+      s = wrap $ session{ expiresAt = unwrap $ ms + exp }
   ls <- liftEff getLocalStorage
   liftEff $ setItem ls sessionKey s
   liftEff $ window >>= Window.location >>= Location.replace "/"
   pure a
 
-handleAuth0 (ParseHash a) = do
-  st <- ask
-  session <- liftAff $ attempt $ parseHash st.webAuth
+handleAuth0 wa (ParseHash a) = do
+  session <- liftAff $ attempt $ parseHash wa
   case session of
     Left _ -> pure $ a Nothing
     Right Nothing -> pure $ a Nothing
@@ -67,7 +80,7 @@ handleAuth0 (ParseHash a) = do
       liftEff $ setItem ls sessionKey s
       pure $ a (Just s)
 
-handleAuth0 (CheckAuth a) = do
+handleAuth0 wa (CheckAuth a) = do
   ls <- liftEff $ getLocalStorage
   session <- liftEff $ getItem ls sessionKey
   case session of

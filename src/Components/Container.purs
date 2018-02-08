@@ -1,4 +1,4 @@
-module Container
+module Components.Container
 ( component
 , matchRoutes
 , Query(..)
@@ -7,7 +7,8 @@ module Container
 import Prelude
 
 import Auth0.Algebra as Auth0
-import Characters as Characters
+import Components.Characters as Characters
+import Components.Login as Login
 import Control.Monad.Aff (Aff, launchAff_)
 import Control.Monad.App (AppM)
 import Control.Monad.Eff (Eff)
@@ -21,7 +22,6 @@ import Halogen.HTML.Events as HE
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
 import Halogen.Component.ChildPath as CP
-import Login as Login
 import Routers as RT
 import Routing (matches)
 
@@ -64,7 +64,7 @@ component =
     ]
 
   header = HH.header
-    [ HP.class_ $ HH.ClassName "bg-black-90 fixed top-0 w-100 ph3 pv4 pv4-ns ph4-m ph5-l" ]
+    [ HP.class_ $ HH.ClassName "bg-black-90 top-0 w-100 ph3 pv4 pv4-ns ph4-m ph5-l" ]
     [ HH.nav
       [ HP.class_ $ HH.ClassName "f6 fw6 ttu tracked" ]
       [
@@ -77,8 +77,10 @@ component =
       ]
     ]
 
-  content st = case st.route of
-    RT.Characters -> HH.slot' CP.cp2 unit Characters.component unit absurd
+  content st = HH.div [ HP.class_ $ HH.ClassName "pa3" ]
+    [ case st.route of
+        RT.Characters -> HH.slot' CP.cp2 unit Characters.component unit absurd
+    ]
 
   eval :: Query ~> H.ParentDSL State Query ChildQuery ChildSlot Output Monad
   eval = case _ of

@@ -1,26 +1,34 @@
 module Client.Algebra
 ( ClientDSLF(..)
-, Resource(..)
 , CLIENT
+, NewCharacter(..)
 , _client
-, getChars
-, log
+, getCharacters
+, makeCharacter
 ) where
 
 import Prelude
-import Run (Run, lift)
-import Data.Foreign (Foreign)
 import Data.Maybe (Maybe)
+import Data.Generic.Rep (class Generic)
+import Data.Generic.Rep.Show (genericShow)
 import Data.Symbol (SProxy(..))
 import Data.Variant.Internal (FProxy)
-import Network.HTTP.Affjax (AffjaxResponse)
+import Run (Run, lift)
+import Simple.JSON (class WriteForeign)
+import Siren.Types (Entity)
+
+newtype NewCharacter = NewCharacter
+  { race :: String
+  , discipline :: String
+  }
+
+derive newtype instance wfNC :: WriteForeign NewCharacter
+derive instance rgNC :: Generic NewCharacter _
+instance showNC :: Show NewCharacter where show e = genericShow e
 
 data ClientDSLF a
-  = Log String a
-  | Get Resource (Maybe (AffjaxResponse Foreign) -> a)
-
-data Resource
-  = AllCharacters
+  = GetCharacters (Maybe Entity -> a)
+  | MakeCharacter NewCharacter (Maybe Entity -> a)
 
 derive instance clientFunctor :: Functor ClientDSLF
 
@@ -28,8 +36,8 @@ type CLIENT = FProxy ClientDSLF
 
 _client = SProxy :: SProxy "client"
 
-log :: forall r. String -> Run (client :: CLIENT | r) Unit
-log s = lift _client (Log s unit)
+getCharacters :: forall r. Run (client :: CLIENT | r) (Maybe Entity)
+getCharacters = lift _client (GetCharacters id)
 
-getChars :: forall r. Run (client :: CLIENT | r) (Maybe (AffjaxResponse Foreign))
-getChars = lift _client (Get AllCharacters id)
+makeCharacter :: forall r. NewCharacter -> Run (client :: CLIENT | r) (Maybe Entity)
+makeCharacter c = lift _client (MakeCharacter c id)
