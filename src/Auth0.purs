@@ -57,7 +57,7 @@ getWebAuth (Env env) = do
     , domain: "alunduil.auth0.com"
     , redirectUri: origin
     , audience: env.auth0Audience
-    , scope: "read:characters create:characters"
+    , scope: "read:characters create:characters delete:characters"
     , responseType: "token"
     }
 

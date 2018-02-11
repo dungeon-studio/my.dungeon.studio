@@ -14,7 +14,7 @@ import Data.Generic.Rep.Show (genericShow)
 import Data.StrMap (StrMap)
 import Data.Maybe (Maybe)
 import Data.Newtype (class Newtype)
-import Simple.JSON (class ReadForeign, read)
+import Simple.JSON (class ReadForeign, class WriteForeign, read)
 
 -- | The top-level object for an @application/vnd.siren+json@ resource.
 newtype Entity = Entity
@@ -33,7 +33,6 @@ derive instance rgE :: Rep.Generic Entity _
 instance showE :: Show Entity where show e = genericShow e
 
 -- | Nested object for an @application/vnd.siren+json@.
-{-- type SubEntityRep = { entity :: Entity, rel :: Array String } --}
 data SubEntity
   = EmbeddedLink Link
   | EmbeddedRepresentation Entity
@@ -64,15 +63,15 @@ newtype Action = Action
   { name   :: String
   , class  :: Maybe (Array String)
   , method :: Maybe String
-  , href   :: Maybe String
+  , href   :: String
   , title  :: Maybe String
   , type   :: Maybe String
   , fields :: Maybe (Array Field)
   }
 
 derive instance ntA :: Newtype Action _
-derive newtype instance rfA :: ReadForeign Action
 derive instance rgA :: Rep.Generic Action _
+derive newtype instance rfAM :: ReadForeign Action
 instance showA :: Show Action where show = genericShow
 
 -- | Control inside of an 'Action'.
@@ -86,5 +85,6 @@ newtype Field = Field
 
 derive instance ntF :: Newtype Field _
 derive newtype instance rfF :: ReadForeign Field
+derive newtype instance wfF :: WriteForeign Field
 derive instance rgF :: Rep.Generic Field _
 instance showF :: Show Field where show = genericShow

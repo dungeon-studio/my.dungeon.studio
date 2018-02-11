@@ -1,31 +1,39 @@
 module Siren
-( _entities
-, getLinkByRel
+( _actions
+, _entities
+, _fields
+, sirenMime
 )
 where
 
 import Prelude
-import Data.Array (elem, head, filter)
+import Data.Lens.Iso (Iso, iso)
 import Data.Maybe (Maybe(..), fromMaybe)
-import Optic.Getter ((^.))
-import Optic.Lens (lens)
-import Optic.Types (Lens')
-import Siren.Types (Action(..), Entity(..), Link(..), SubEntity)
+import Data.Newtype (class Newtype, wrap, unwrap)
+import Data.Lens (lens)
+import Data.Lens.Types (Lens')
+import Siren.Types
+  ( Action
+  , Entity
+  , Field
+  , Link
+  , SubEntity
+  )
 
-type Rel = String
-type Name = String
+sirenMime :: String
+sirenMime = "application/vnd.siren+json"
+
+_Newtype :: forall t a s b. Newtype t a => Newtype s b => Iso t s a b
+_Newtype = iso unwrap wrap
 
 _links :: Lens' Entity (Array Link)
-_links = lens (\(Entity e) -> e.links) (\(Entity e) v -> Entity e { links = v })
+_links = _Newtype <<< lens (_.links) (_ {links = _ })
 
 _actions :: Lens' Entity (Array Action)
-_actions = lens (\(Entity e) -> fromMaybe [] e.actions) (\(Entity e) v -> Entity e { actions = Just v })
+_actions = _Newtype <<< lens (\e -> fromMaybe [] e.actions) (\e v -> e { actions = Just v })
+
+_fields :: Lens' Action (Array Field)
+_fields = _Newtype <<< lens (\a -> fromMaybe [] a.fields) (\a v -> a { fields = Just v })
 
 _entities :: Lens' Entity (Array SubEntity)
-_entities = lens (\(Entity e) -> fromMaybe [] e.entities) (\(Entity e) v -> Entity e { entities = Just v })
-
-getLinkByRel :: Entity -> String -> Maybe Link
-getLinkByRel e rel = head $ e ^. _links # filter (\(Link l) -> rel `elem` l.rel)
-
-getActionByName :: Entity -> String -> Maybe Action
-getActionByName e n = head $ e ^. _actions # filter (\(Action a) -> a.name == n)
+_entities = _Newtype <<< lens (\e -> fromMaybe [] e.entities) (\e v -> e { entities = Just v })
