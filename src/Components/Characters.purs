@@ -6,20 +6,26 @@ module Components.Characters
 import Prelude
 
 import Client.Algebra (ResponseType(..), getRoot, resolveAction, resolveLink)
-import CollectionJSON (CollectionJSON(..), Collection(..), Item(..), collectionMime)
+import CollectionJSON (CollectionJSON(..), Collection(..), Datum(..), Item(..), collectionMime)
 import Control.Alt ((<|>))
 import Control.Monad.App (AppM)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Trans.Class (class MonadTrans, lift)
 import Control.Parallel (class Parallel, parTraverse)
-import Data.Array (catMaybes, elem, filter, find)
+import Data.Array ((!!), catMaybes, elem, filter, find, head)
+import Data.Either (either)
 import Data.Lens.Getter ((^.))
-import Data.Maybe (Maybe(..), maybe)
+import Data.Maybe (Maybe(..), fromMaybe, maybe)
 import Data.Newtype (unwrap)
+import Data.Path.Pathy (currentDir, dir, parseRelFile, relativeTo, rootDir)
 import Data.StrMap (fromFoldable)
-import Data.Tuple (Tuple(..))
+import Data.Tuple (Tuple(..), fst)
+import Data.URI.HierarchicalPart (_path)
+import Data.URI.Host (_NameAddress)
+import Data.URI.Scheme (print)
+import Data.URI.URI (_authority, _hierPart, _hosts, _scheme, parse)
 import Debug.Trace (traceAnyA)
-import DOM.Event.Event (preventDefault)
+import DOM.Event.Event (preventDefault, target)
 import DOM.Event.Types (Event)
 import DOM.HTML.Indexed.ButtonType (ButtonType(..))
 import Halogen as H
@@ -31,14 +37,16 @@ import Siren.Types (Entity(..), Link(..), SubEntity(..))
 
 data Query a =
   Init a
-  {-- | Submit Event a --}
-  {-- | UpdateRace String a --}
-  {-- | UpdateDiscipline String a --}
+  | Submit Event a
+  | UpdateRace String a
+  | UpdateDiscipline String a
 
 type Input = Unit
 type Output = Void
 type State =
   { collections :: Array CollectionMap
+  , race :: Maybe String
+  , discipline :: Maybe String
   , root  :: Maybe Entity
   }
 type Monad = AppM
@@ -51,6 +59,8 @@ type CollectionMap =
 initialState :: State
 initialState =
   { collections: []
+  , race: Nothing
+  , discipline: Nothing
   , root: Nothing
   }
 
@@ -67,30 +77,26 @@ component =
   where
 
   render :: State -> H.ComponentHTML Query
-  render st = HH.div [] [ listSubEntities st.root ]
+  render st = HH.div [] [ createForm, listSubEntities st.root ]
     where
-      {-- createForm = --}
-      {--   HH.form [ HE.onSubmit (HE.input Submit) ] --}
-      {--     [ HH.label --}
-      {--         [ HP.class_ $ HH.ClassName "mh2 white", HP.for "race" ] --}
-      {--         [ HH.text "Race" ] --}
-      {--     , HH.input --}
-      {--         [ HP.type_ HP.InputText --}
-      {--         , HP.id_ "race" --}
-      {--         , HE.onValueChange (HE.input UpdateRace) --}
-      {--         ] --}
-      {--     , HH.label --}
-      {--         [ HP.class_ $ HH.ClassName "mh2 white", HP.for "discipline" ] --}
-      {--         [ HH.text "Discipline" ] --}
-      {--     , HH.input --}
-      {--         [ HP.type_ HP.InputText --}
-      {--         , HP.id_ "discipline" --}
-      {--         , HE.onValueChange (HE.input UpdateDiscipline) --}
-      {--         ] --}
-      {--     , HH.button --}
-      {--         [ HP.type_ ButtonSubmit ] --}
-      {--         [ HH.text "Create" ] --}
-      {--     ] --}
+      createForm =
+        HH.form [ HP.id_ "character", HE.onSubmit (HE.input Submit) ]
+          [ HH.label
+              [ HP.class_ $ HH.ClassName "mh2 white", HP.for "race" ]
+              [ HH.text "Race" ]
+          , HH.select
+              [ HP.id_ "race" , HE.onValueChange (HE.input UpdateRace) ]
+              (itemsToOptions "races" st.collections)
+          , HH.label
+              [ HP.class_ $ HH.ClassName "mh2 white", HP.for "discipline" ]
+              [ HH.text "Discipline" ]
+          , HH.select
+              [ HP.id_ "discipline" , HE.onValueChange (HE.input UpdateDiscipline) ]
+              (itemsToOptions "disciplines" st.collections)
+          , HH.button
+              [ HP.type_ ButtonSubmit ]
+              [ HH.text "Create" ]
+          ]
 
       listSubEntities = case _ of
         Nothing -> HH.div_ []
@@ -123,12 +129,13 @@ component =
                     , collections = collectionMaps rs
                     }
           st <- H.get
-          traceAnyA $ getItems st.collections "races"
+          traceAnyA $ getItems "races" st.collections
           pure next
-    {-- UpdateRace race next -> H.modify _{ raceInput = race } $> next --}
-    {-- UpdateDiscipline d next -> H.modify _{ disciplineInput = d } $> next --}
-    {-- Submit e next -> do --}
-      {-- liftEff $ preventDefault e --}
+    UpdateRace uri next -> H.modify _{ race = Just uri } $> next
+    UpdateDiscipline uri next -> H.modify _{ discipline = Just uri } $> next
+    Submit e next -> do
+      liftEff $ preventDefault e
+      pure next
       {-- st <- H.get --}
       {-- let action = getActionByName st.root "create-character" --}
       {--     fields = action ^. _fields --}
@@ -159,10 +166,42 @@ collectionMaps rs =
       _ -> Nothing
 
 getItems
-  :: Array CollectionMap
-  -> String
-  -> Maybe (Array Item)
-getItems cms rel = maybe Nothing items cmap
-  where cmap = cms # find (\cm -> rel `elem` (link cm # _.rel))
+  :: String
+  -> Array CollectionMap
+  -> Array Item
+getItems rel cmaps = maybe [] items cmap
+  where cmap = cmaps # find (\cm -> rel `elem` (link cm # _.rel))
         link = _.link >>> unwrap
-        items = _.collection >>> unwrap >>> _.items
+        items = _.collection >>> unwrap >>> _.items >>> fromMaybe []
+
+getAbsoluteURI :: String -> String -> String
+getAbsoluteURI uri rel = show path
+  where path = either (const "" ) uriPath (parse uri)
+        uriPath u = maybe "" (\h -> scheme u <> "//" <> h <> "/" <> rel) (head $ names u)
+        names u = ((_ ^. _NameAddress) <<< fst) <$> hosts u
+        hosts u = maybe [] (_ ^. _hosts) (authority u)
+        authority u = u ^. _hierPart ^. _authority
+        scheme u = maybe "http://" print $ u ^. _scheme
+
+itemToOption
+  :: forall p i
+   . String
+  -> Array CollectionMap
+  -> Item
+  -> HH.HTML p i
+itemToOption rel cmaps (Item i) = case i.data of
+  Nothing -> HH.option_ []
+  Just ds -> do
+    let link = _.link >>> unwrap
+        cmap = cmaps # find (\cm -> rel `elem` (link cm # _.rel))
+        value = maybe "" (\cm -> getAbsoluteURI (link cm # _.href) i.href) cmap
+        label = ds # find (\(Datum d) -> d.name == "name")
+          >>> maybe "Untitled" (unwrap >>> _.prompt >>> fromMaybe "Untitled")
+    HH.option [ HP.value value ] [ HH.text label ]
+
+itemsToOptions
+  :: forall p i
+   . String
+  -> Array CollectionMap
+  -> Array (HH.HTML p i)
+itemsToOptions rel cmaps = itemToOption rel cmaps <$> getItems rel cmaps
