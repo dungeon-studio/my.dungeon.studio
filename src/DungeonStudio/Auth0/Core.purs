@@ -1,4 +1,4 @@
-module Auth0
+module DungeonStudio.Auth0.Core
 ( AUTH0EFF
 , Auth0Config
 , LSKey(..)
@@ -21,7 +21,7 @@ import DOM (DOM)
 import DOM.HTML (window)
 import DOM.HTML.Location as Location
 import DOM.HTML.Window as Window
-import Env (Env(..))
+import DungeonStudio.Env (Env(..))
 
 type Auth0Config =
   { clientID :: String

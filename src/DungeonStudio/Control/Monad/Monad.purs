@@ -1,16 +1,16 @@
-module Control.Monad.App
+module DungeonStudio.Control.Monad
 ( AppEffects
 , AppM
 ) where
 
-import Auth0 (AUTH0EFF)
-import Auth0.Algebra (AUTH0)
-import Client.Algebra (CLIENT)
 import Control.Monad.Eff.Console (CONSOLE)
 import Control.Monad.Eff.Now (NOW)
 import DOM (DOM)
 import DOM.WebStorage (STORAGE)
-import Env (Env)
+import DungeonStudio.Auth0.Core (AUTH0EFF)
+import DungeonStudio.Auth0.Algebra (AUTH0)
+import DungeonStudio.Client.Algebra (CLIENT)
+import DungeonStudio.Env (Env)
 import Halogen.Aff as HA
 import Run (Run, AFF, EFF)
 import Run.Reader (READER)

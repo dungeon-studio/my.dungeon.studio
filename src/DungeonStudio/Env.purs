@@ -1,4 +1,4 @@
-module Env
+module DungeonStudio.Env
 ( Env(..)
 , env
 , getEnv

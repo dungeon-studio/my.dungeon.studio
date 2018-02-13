@@ -1,4 +1,4 @@
-module CollectionJSON
+module Data.CollectionJSON
 ( CollectionJSON(..)
 , Collection(..)
 , Link(..)

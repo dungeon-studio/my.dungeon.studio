@@ -6,16 +6,15 @@ import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (error)
 import Control.Monad.Eff.Class (liftEff)
 import Data.Either (Either(..))
+import DungeonStudio.Auth0.Core (WebAuth, getWebAuth)
+import DungeonStudio.Auth0.Eval (runAuth0)
+import DungeonStudio.Client.Eval (runClient)
+import DungeonStudio.Env (Env, getEnv)
+import DungeonStudio.Components.Container as Container
+import DungeonStudio.Control.Monad (AppEffects, AppM)
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.VDom.Driver (runUI)
-
-import Auth0 (WebAuth, getWebAuth)
-import Auth0.Eval (runAuth0)
-import Client.Eval (runClient)
-import Components.Container as Container
-import Control.Monad.App (AppEffects, AppM)
-import Env (Env, getEnv)
 import Run (runBaseAff')
 import Run.Reader (runReader)
 

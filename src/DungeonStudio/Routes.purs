@@ -1,4 +1,4 @@
-module Routers where
+module DungeonStudio.Routes where
 
 import Control.Alt ((<$))
 import Prelude (class Show)

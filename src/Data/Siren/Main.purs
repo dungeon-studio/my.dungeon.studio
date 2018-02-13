@@ -1,18 +1,23 @@
-module Siren
+module Data.Siren
 ( _actions
 , _entities
 , _fields
+, _href
+, _rel
+, getLinkByRel
 , sirenMime
 )
 where
 
 import Prelude
+import Data.Array (elem, find)
 import Data.Lens.Iso (Iso, iso)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Newtype (class Newtype, wrap, unwrap)
 import Data.Lens (lens)
+import Data.Lens.Getter ((^.))
 import Data.Lens.Types (Lens')
-import Siren.Types
+import Data.Siren.Types
   ( Action
   , Entity
   , Field
@@ -37,3 +42,12 @@ _fields = _Newtype <<< lens (\a -> fromMaybe [] a.fields) (\a v -> a { fields = 
 
 _entities :: Lens' Entity (Array SubEntity)
 _entities = _Newtype <<< lens (\e -> fromMaybe [] e.entities) (\e v -> e { entities = Just v })
+
+_href :: Lens' Link String
+_href = _Newtype <<< lens (_.href) (_ {href = _ })
+
+_rel :: Lens' Link (Array String)
+_rel = _Newtype <<< lens (_.rel) (_ {rel = _ })
+
+getLinkByRel :: Entity -> String -> Maybe Link
+getLinkByRel e rel = e ^. _links # find (\l -> rel `elem` (l ^. _rel))

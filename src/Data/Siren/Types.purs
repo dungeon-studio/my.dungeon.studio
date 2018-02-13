@@ -1,4 +1,4 @@
-module Siren.Types
+module Data.Siren.Types
 ( Entity(..)
 , SubEntity(..)
 , Link(..)

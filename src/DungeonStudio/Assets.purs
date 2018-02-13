@@ -1,4 +1,4 @@
-module Assets
+module DungeonStudio.Assets
 ( getImgSrc
 ) where
 

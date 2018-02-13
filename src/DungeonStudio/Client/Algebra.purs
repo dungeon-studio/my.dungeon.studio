@@ -1,4 +1,4 @@
-module Client.Algebra
+module DungeonStudio.Client.Algebra
 ( ClientDSLF(..)
 , CLIENT
 , ResponseType(..)
@@ -9,14 +9,14 @@ module Client.Algebra
 ) where
 
 import Prelude
-import CollectionJSON (CollectionJSON)
 import Control.Alt ((<|>))
+import Data.CollectionJSON (CollectionJSON)
 import Data.Maybe (Maybe)
+import Data.Siren.Types (Action, Entity, Link)
 import Data.Symbol (SProxy(..))
 import Data.Variant.Internal (FProxy)
 import Run (Run, lift)
 import Simple.JSON (class ReadForeign, read)
-import Siren.Types (Action, Entity, Link)
 
 data ResponseType = REntity Entity | RCollectionJSON CollectionJSON
 instance rfRT :: ReadForeign ResponseType where

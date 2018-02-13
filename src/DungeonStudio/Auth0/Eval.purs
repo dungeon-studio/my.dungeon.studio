@@ -1,10 +1,9 @@
-module Auth0.Eval
+module DungeonStudio.Auth0.Eval
 ( handleAuth0
 , runAuth0
 ) where
 
 import Prelude
-import Control.Monad.App (AppEffects)
 import Control.Monad.Aff (attempt)
 import Control.Monad.Eff.Now (now)
 import Data.Either (Either(..))
@@ -16,12 +15,12 @@ import DOM.HTML (window)
 import DOM.HTML.Location as Location
 import DOM.HTML.Window as Window
 import DOM.WebStorage (getItem, removeItem, setItem, getLocalStorage)
+import DungeonStudio.Auth0.Core (Session(..), WebAuth, authorize, parseHash, sessionKey)
+import DungeonStudio.Auth0.Algebra (Auth0DSLF(..), AUTH0, _auth0)
+import DungeonStudio.Env (Env)
+import DungeonStudio.Control.Monad (AppEffects)
 import Run (Run, AFF, EFF, interpret, liftEff, liftAff, on, send)
 import Run.Reader (READER)
-
-import Auth0 (Session(..), WebAuth, authorize, parseHash, sessionKey)
-import Auth0.Algebra (Auth0DSLF(..), AUTH0, _auth0)
-import Env (Env)
 
 runAuth0
   :: WebAuth

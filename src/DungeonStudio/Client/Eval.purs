@@ -1,26 +1,26 @@
-module Client.Eval
+module DungeonStudio.Client.Eval
 ( handleClient
 , runClient
 ) where
 
 import Prelude
-import Auth0 (Session(..))
-import Auth0.Algebra (AUTH0, getSession)
-import Client.Algebra (ClientDSLF(..), ResponseType, CLIENT, _client)
-import Control.Monad.App (AppEffects)
 import Data.Either (Either(..), hush)
 import Data.Foreign (MultipleErrors)
 import Data.Maybe (Maybe(..), fromMaybe, maybe)
 import Data.HTTP.Method (Method(..), fromString)
+import Data.Siren.Types (Action(..), Link(..))
 import Data.String (Pattern(..), contains)
 {-- import Debug.Trace (traceAnyA) --}
-import Env (Env(..))
+import DungeonStudio.Auth0.Core (Session(..))
+import DungeonStudio.Auth0.Algebra (AUTH0, getSession)
+import DungeonStudio.Client.Algebra (ClientDSLF(..), ResponseType, CLIENT, _client)
+import DungeonStudio.Control.Monad (AppEffects)
+import DungeonStudio.Env (Env(..))
 import Network.HTTP.Affjax (affjax, defaultRequest, get)
 import Network.HTTP.RequestHeader (RequestHeader(..))
 import Run (Run, AFF, EFF, interpret, liftAff, on, send)
 import Run.Reader (READER, ask)
 import Simple.JSON (readJSON, writeJSON)
-import Siren.Types (Action(..), Link(..))
 
 runClient
   :: Run ( client :: CLIENT
