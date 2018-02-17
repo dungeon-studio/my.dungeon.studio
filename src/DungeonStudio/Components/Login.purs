@@ -8,7 +8,7 @@ import Prelude
 import Control.Monad.Trans.Class (lift)
 import Data.Maybe (Maybe(..))
 import DungeonStudio.Assets (getImgSrc)
-import DungeonStudio.Auth0.Algebra (authorize)
+import DungeonStudio.DSL.Auth0.Algebra (authorize)
 import DungeonStudio.Control.Monad (AppM)
 import DungeonStudio.CSS (css)
 import Halogen as H
@@ -42,10 +42,10 @@ component =
         [
           HH.img [ css "pa3 mw3 hover dim", HP.src $ getImgSrc "logo-splash.svg" ]
         , HH.div [ css "f4 fw2 tracked ttu mb4 lh-title" ]
-          [
-            HH.span [ css "fw4" ] [ HH.text "Dungeon" ]
-          , HH.span [ css "fw1" ] [ HH.text " Studio" ]
-          ]
+            [
+              HH.span [ css "fw4" ] [ HH.text "Dungeon" ]
+            , HH.span [ css "fw1" ] [ HH.text " Studio" ]
+            ]
         , HH.button
             [ css buttonClass, HE.onClick (HE.input_ Login) ]
             [ HH.text "Login" ]

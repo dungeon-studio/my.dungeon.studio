@@ -4,6 +4,9 @@ module Data.Siren
 , _fields
 , _href
 , _rel
+, _ActionName
+, _FieldName
+, getActionByName
 , getLinkByRel
 , sirenMime
 )
@@ -49,5 +52,14 @@ _href = _Newtype <<< lens (_.href) (_ {href = _ })
 _rel :: Lens' Link (Array String)
 _rel = _Newtype <<< lens (_.rel) (_ {rel = _ })
 
+_ActionName :: Lens' Action String
+_ActionName = _Newtype <<< lens (_.name) (_ {name = _ })
+
+_FieldName :: Lens' Field String
+_FieldName = _Newtype <<< lens (_.name) (_ {name = _ })
+
 getLinkByRel :: Entity -> String -> Maybe Link
 getLinkByRel e rel = e ^. _links # find (\l -> rel `elem` (l ^. _rel))
+
+getActionByName :: Entity -> String -> Maybe Action
+getActionByName e name = e ^. _actions # find (\a -> a ^. _ActionName == name)

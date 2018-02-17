@@ -1,4 +1,4 @@
-module DungeonStudio.Auth0.Algebra
+module DungeonStudio.DSL.Auth0.Algebra
 ( Auth0DSLF(..)
 , AUTH0
 , _auth0
@@ -14,7 +14,7 @@ import Prelude
 import Data.Maybe (Maybe)
 import Data.Symbol (SProxy(..))
 import Data.Variant.Internal (FProxy)
-import DungeonStudio.Auth0.Core (Session)
+import DungeonStudio.DSL.Auth0.Core (Session)
 import Run (Run, lift)
 
 data Auth0DSLF a

@@ -1,6 +1,7 @@
-module DungeonStudio.Client.Algebra
+module DungeonStudio.DSL.Client.Algebra
 ( ClientDSLF(..)
 , CLIENT
+, Payload(..)
 , ResponseType(..)
 , _client
 , getRoot
@@ -12,7 +13,9 @@ import Prelude
 import Control.Alt ((<|>))
 import Data.CollectionJSON (CollectionJSON)
 import Data.Maybe (Maybe)
+import Data.Newtype (class Newtype)
 import Data.Siren.Types (Action, Entity, Link)
+import Data.StrMap (StrMap)
 import Data.Symbol (SProxy(..))
 import Data.Variant.Internal (FProxy)
 import Run (Run, lift)
@@ -24,10 +27,13 @@ instance rfRT :: ReadForeign ResponseType where
     = REntity <$> read f
     <|> RCollectionJSON <$> read f
 
+newtype Payload = Payload (StrMap String)
+derive instance ntP :: Newtype Payload _
+
 data ClientDSLF a
   = GetRoot String (Maybe Entity -> a)
   | ResolveLink Link (Maybe ResponseType -> a)
-  | ResolveAction Action (Maybe ResponseType -> a)
+  | ResolveAction Action Payload (Maybe ResponseType -> a)
 
 derive instance clientFunctor :: Functor ClientDSLF
 
@@ -50,5 +56,6 @@ resolveLink l = lift _client (ResolveLink l id)
 resolveAction
   :: forall r
    . Action
+  -> Payload
   -> Run (client :: CLIENT | r) (Maybe ResponseType)
-resolveAction a = lift _client (ResolveAction a id)
+resolveAction a p = lift _client (ResolveAction a p id)

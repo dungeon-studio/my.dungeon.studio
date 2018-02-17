@@ -1,4 +1,4 @@
-module DungeonStudio.Components.Characters
+module DungeonStudio.Components.EntityAction
 ( Query
 , component
 ) where
@@ -8,21 +8,21 @@ import Prelude
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Trans.Class (class MonadTrans, lift)
 import Control.Parallel (class Parallel, parTraverse)
-import Data.Array (catMaybes, concatMap, elem, filter, find, head)
+import Data.Array (catMaybes, concatMap, elem, filter, find, foldl, head)
 import Data.CollectionJSON (CollectionJSON(..), Collection, Datum(..), Item(..), collectionMime)
 import Data.Either (either)
 import Data.Lens.Getter ((^.))
 import Data.Maybe (Maybe(..), fromMaybe, maybe)
-import Data.Newtype (unwrap)
-import Data.Siren (_entities)
-import Data.Siren.Types (Entity(..), Link(..), SubEntity(..))
+import Data.Newtype (unwrap, wrap)
+import Data.Siren (_fields, _href, _FieldName, getActionByName, getLinkByRel)
+import Data.Siren.Types (Action, Entity(..), Link(..))
 import Data.StrMap (StrMap, empty, insert, lookup)
 import Data.Tuple (Tuple(..), fst)
 import Data.URI.Host (_NameAddress)
 import Data.URI.Scheme (print)
 import Data.URI.URI (_authority, _hierPart, _hosts, _scheme, parse)
 import Debug.Trace (traceAnyA)
-import DungeonStudio.Client.Algebra (ResponseType(..), getRoot, resolveAction, resolveLink)
+import DungeonStudio.DSL.Client.Algebra (ResponseType(..), resolveAction, resolveLink)
 import DungeonStudio.Control.Monad (AppM)
 import DungeonStudio.CSS (css)
 import DOM.Event.Event (preventDefault)
@@ -35,7 +35,7 @@ import Halogen.HTML.Properties as HP
 import Halogen.HTML.Properties.ARIA as HPA
 
 data Query a =
-  Init a
+  Init Entity String a
   | Submit Event a
   | UpdateSelect String String a
 
@@ -43,14 +43,15 @@ type Input = Unit
 type Output = Void
 type State =
   { collections :: Array CollectionMap
-  , fields :: StrMap String
-  , root  :: Maybe Entity
+  , fields      :: StrMap String
+  , root        :: Maybe Entity
+  , action      :: Maybe Action
   }
 type Monad = AppM
 
 type CollectionMap =
-  { link :: Link
-  , collection :: Collection
+  { link        :: Link
+  , collection  :: Collection
   }
 
 buttonClass :: String
@@ -61,10 +62,11 @@ initialState =
   { collections: []
   , fields: empty
   , root: Nothing
+  , action: Nothing
   }
 
-component :: H.Component HH.HTML Query Input Output Monad
-component =
+component :: Entity -> String -> H.Component HH.HTML Query Input Output Monad
+component ent actionName =
   H.lifecycleComponent
     { initialState: const initialState
     , render
@@ -76,11 +78,10 @@ component =
   where
 
   render :: State -> H.ComponentHTML Query
-  render st = HH.div [ css "w-100 tc pa5" ] [ renderForm, renderSubEntities st.root ]
+  render st = HH.div [ css "w-100 tc pa5" ] renderForm
     where
       renderForm =
-        HH.div
-          [ css "w-100" ]
+        [ HH.div_
           [ HH.div
               [ css "white fw7 pb3 header" ]
               [ HH.text "Create a Character"]
@@ -92,6 +93,7 @@ component =
                   [ HH.text "Create" ]
               ]
           ]
+        ]
 
       renderItemSelect cmaps rel =
         HH.div_
@@ -102,7 +104,7 @@ component =
                 [ HH.text rel ]
             , HH.select
                 [ HP.id_ rel
-                , css "pa1 bg-white w5 mb3"
+                , css "pa1 bg-white w5-ns w-70 mb3"
                 , HE.onValueChange $ HE.input (UpdateSelect rel)
                 ]
                 (itemsToOptions rel cmaps)
@@ -126,46 +128,33 @@ component =
               , HH.span [] [ HH.text $ fromMaybe "" d.value ]
               ]
 
-      renderSubEntities = case _ of
-        Nothing -> HH.div_ []
-        Just root -> HH.div_ $ renderSubEntity <$> root ^. _entities
-
-      renderSubEntity = case _ of
-        EmbeddedLink l -> HH.div_ []
-        EmbeddedRepresentation (Entity ent) -> HH.div_ $ renderLink <$> ent.links
-
-      renderLink (Link l) =
-          HH.div
-            [ css "white pv3 tracked" ]
-            [ HH.div
-              [ css "ttu"]
-              [ HH.text $ maybe "Untitled" id l.title]
-          , HH.div
-              []
-              [ HH.text l.href ]
-            ]
-
   eval :: Query ~> H.ComponentDSL State Query Output Monad
   eval = case _ of
-    Init next -> do
-      root <- lift $ getRoot "/characters"
-      case root of
-        Nothing -> pure next
-        ent@(Just e) -> do
-          rs <- fetchCollections e
-          H.modify _{ root = ent, collections = collectionMaps rs } $> next
+    Init e an next -> do
+      rs <- fetchCollections e
+      H.modify _{ root = Just e
+                , collections = collectionMaps rs
+                , action = getActionByName e an
+                } $> next
     UpdateSelect rel path next -> do
        st <- H.get
        case st.root of
          Nothing -> pure next
          Just root -> H.modify _{ fields = insert rel path st.fields } $> next
     Submit e next -> do
-      {-- let base = maybe "" (_ ^. _href) $ getLinkByRel root $ rel <> "s" --}
-      {--     absoluteURI = getAbsoluteURI base path --}
-      liftEff $ preventDefault e
-      pure next
+      st <- H.get
+      case (Tuple st.root st.action) of
+        Tuple (Just root) (Just action) -> do
+          let rels = (_ ^. _FieldName) <$> action ^. _fields
+              base rel = maybe "" (_ ^. _href) $ getLinkByRel root $ rel <> "s"
+              pathFor n = fromMaybe "" (lookup n st.fields)
+              -- TODO: Fold over all fields and do not assume the field name is a Siren relation
+              fields = foldl (\m rel -> insert rel (getAbsoluteURI (base rel) (pathFor rel)) m) empty rels
+          liftEff $ preventDefault e
+          lift $ resolveAction action (wrap fields) $> next
+        _ -> pure next
 
-  initializer = Just $ H.action Init
+  initializer = Just $ H.action $ Init ent actionName
   finalizer = Nothing
 
 fetchCollections
@@ -179,12 +168,10 @@ fetchCollections (Entity e) =
   parTraverse (\l -> Tuple l <$> (lift $ resolveLink l))
     $ e.links # filter (\(Link l) -> maybe false ((==) collectionMime) l.type)
 
-collectionMaps
-  :: Array (Tuple Link (Maybe ResponseType))
-  -> Array CollectionMap
+collectionMaps :: Array (Tuple Link (Maybe ResponseType)) -> Array CollectionMap
 collectionMaps rs =
-  catMaybes $ flip map rs
-    $ case _ of
+  catMaybes $ rs <#>
+    case _ of
       Tuple l (Just (RCollectionJSON (CollectionJSON c))) ->
         Just { link: l, collection: c.collection }
       _ -> Nothing
@@ -211,10 +198,7 @@ getAbsoluteURI baseURI relPath = fullPath
         authority u = u ^. _hierPart ^. _authority
         scheme u = maybe "http://" print $ u ^. _scheme
 
-itemToOption
-  :: forall p i
-   . Item
-  -> HH.HTML p i
+itemToOption :: forall p i . Item -> HH.HTML p i
 itemToOption (Item i) = case i.data of
   Nothing -> HH.option_ []
   Just ds -> HH.option [ HP.value i.href ] [ HH.text $ label ds ]
@@ -222,11 +206,7 @@ itemToOption (Item i) = case i.data of
       maybe "Untitled" (unwrap >>> _.prompt >>> fromMaybe "Untitled")
 
 -- TODO How are singular and plural relation strings connected?
-itemsToOptions
-  :: forall p i
-   . String
-  -> Array CollectionMap
-  -> Array (HH.HTML p i)
+itemsToOptions :: forall p i . String -> Array CollectionMap -> Array (HH.HTML p i)
 itemsToOptions rel cmaps = [emptyOption] <> (itemToOption <$> getItemsByRel (rel <> "s") cmaps)
 
 emptyOption :: forall p i. HH.HTML p i

@@ -1,4 +1,4 @@
-module DungeonStudio.Client.Eval
+module DungeonStudio.DSL.Client.Eval
 ( handleClient
 , runClient
 ) where
@@ -11,9 +11,9 @@ import Data.HTTP.Method (Method(..), fromString)
 import Data.Siren.Types (Action(..), Link(..))
 import Data.String (Pattern(..), contains)
 {-- import Debug.Trace (traceAnyA) --}
-import DungeonStudio.Auth0.Core (Session(..))
-import DungeonStudio.Auth0.Algebra (AUTH0, getSession)
-import DungeonStudio.Client.Algebra (ClientDSLF(..), ResponseType, CLIENT, _client)
+import DungeonStudio.DSL.Auth0.Core (Session(..))
+import DungeonStudio.DSL.Auth0.Algebra (AUTH0, getSession)
+import DungeonStudio.DSL.Client.Algebra (ClientDSLF(..), Payload(..), ResponseType, CLIENT, _client)
 import DungeonStudio.Control.Monad (AppEffects)
 import DungeonStudio.Env (Env(..))
 import Network.HTTP.Affjax (affjax, defaultRequest, get)
@@ -82,7 +82,7 @@ handleClient (ResolveLink (Link l) a) = do
       {-- traceAnyA $ readJSON (res.response) :: Either MultipleErrors ResponseType --}
           pure $ a $ hush $ parse res.response
 
-handleClient (ResolveAction (Action action) a) = do
+handleClient (ResolveAction (Action action) (Payload payload) a) = do
   (Env env) <- ask
   session <- getSession
   case session of
@@ -91,7 +91,7 @@ handleClient (ResolveAction (Action action) a) = do
       res <- liftAff $ affjax $ defaultRequest
         { url = "http://" <> env.apiHost <> action.href
         , method = maybe (Left GET) fromString action.method
-        , content = Just $ writeJSON action.fields
+        , content = Just $ writeJSON payload
         , headers = [ RequestHeader "Authorization" $ "Bearer " <> s.accessToken
                     , RequestHeader "Content-Type" $ fromMaybe "" action.type
                     ]

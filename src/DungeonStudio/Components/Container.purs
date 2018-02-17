@@ -12,8 +12,8 @@ import Control.Monad.Trans.Class (lift)
 import Data.Maybe (Maybe(..))
 import Data.Either.Nested (Either2)
 import Data.Functor.Coproduct.Nested (Coproduct2)
-import DungeonStudio.Auth0.Algebra as Auth0
-import DungeonStudio.Components.Characters as Characters
+import DungeonStudio.DSL.Auth0.Algebra as Auth0
+import DungeonStudio.Components.Entity as Entity
 import DungeonStudio.Components.Login as Login
 import DungeonStudio.CSS (css)
 import DungeonStudio.Control.Monad (AppM)
@@ -31,7 +31,7 @@ data AuthStatus = Authenticated | NotAuthenticated | Loading
 type State = { auth :: AuthStatus, route :: RT.Routes }
 type Input = Unit
 type Output = Void
-type ChildQuery = Coproduct2 Login.Query Characters.Query
+type ChildQuery = Coproduct2 Login.Query Entity.Query
 type ChildSlot = Either2 Unit Unit
 type Monad = AppM
 
@@ -80,7 +80,7 @@ component =
 
   content st = HH.div [ css "pa3" ]
     [ case st.route of
-        RT.Characters -> HH.slot' CP.cp2 unit Characters.component unit absurd
+        RT.Characters -> HH.slot' CP.cp2 unit (Entity.component "/characters") unit absurd
     ]
 
   eval :: Query ~> H.ParentDSL State Query ChildQuery ChildSlot Output Monad
@@ -104,6 +104,7 @@ component =
   initializer = Just $ H.action Init
   finalizer = Nothing
 
+-- TODO: Move routing into DSL
 matchRoutes
   :: forall eff
    . H.HalogenIO Query Void (Aff (HA.HalogenEffects eff))

@@ -1,4 +1,4 @@
-module DungeonStudio.Auth0.Core
+module DungeonStudio.DSL.Auth0.Core
 ( AUTH0EFF
 , Auth0Config
 , LSKey(..)

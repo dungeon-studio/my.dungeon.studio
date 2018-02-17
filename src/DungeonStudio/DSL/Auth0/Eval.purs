@@ -1,4 +1,4 @@
-module DungeonStudio.Auth0.Eval
+module DungeonStudio.DSL.Auth0.Eval
 ( handleAuth0
 , runAuth0
 ) where
@@ -15,8 +15,8 @@ import DOM.HTML (window)
 import DOM.HTML.Location as Location
 import DOM.HTML.Window as Window
 import DOM.WebStorage (getItem, removeItem, setItem, getLocalStorage)
-import DungeonStudio.Auth0.Core (Session(..), WebAuth, authorize, parseHash, sessionKey)
-import DungeonStudio.Auth0.Algebra (Auth0DSLF(..), AUTH0, _auth0)
+import DungeonStudio.DSL.Auth0.Core (Session(..), WebAuth, authorize, parseHash, sessionKey)
+import DungeonStudio.DSL.Auth0.Algebra (Auth0DSLF(..), AUTH0, _auth0)
 import DungeonStudio.Env (Env)
 import DungeonStudio.Control.Monad (AppEffects)
 import Run (Run, AFF, EFF, interpret, liftEff, liftAff, on, send)
