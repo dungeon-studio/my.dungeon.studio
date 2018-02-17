@@ -47,11 +47,10 @@ handleClient
          )
 
 handleClient (GetRoot u a) = do
-  (Env env) <- ask
-  session <- getSession
-  case session of
+  getSession >>= case _ of
     Nothing -> pure $ a Nothing
     Just (Session s) -> do
+      (Env env) <- ask
       res <- liftAff $ affjax $ defaultRequest
         { url = "http://" <> env.apiHost <> u
         , method = Left GET
@@ -64,14 +63,13 @@ handleClient (GetRoot u a) = do
 
 -- TODO How do I know which are protected resources?
 handleClient (ResolveLink (Link l) a) = do
-  (Env env) <- ask
   if (Pattern "://") `contains` l.href
     then liftAff $ get l.href >>= _.response >>> parse >>> hush >>> a >>> pure
     else do
-      session <- getSession
-      case session of
+      getSession >>= case _ of
         Nothing -> pure $ a Nothing
         Just (Session s) -> do
+          (Env env) <- ask
           res <- liftAff $ affjax $ defaultRequest
             { url = "http://" <> env.apiHost <> l.href
             , method = Left GET
@@ -83,11 +81,10 @@ handleClient (ResolveLink (Link l) a) = do
           pure $ a $ hush $ parse res.response
 
 handleClient (ResolveAction (Action action) (Payload payload) a) = do
-  (Env env) <- ask
-  session <- getSession
-  case session of
+  getSession >>= case _ of
     Nothing -> pure $ a Nothing
     Just (Session s) -> do
+      (Env env) <- ask
       res <- liftAff $ affjax $ defaultRequest
         { url = "http://" <> env.apiHost <> action.href
         , method = maybe (Left GET) fromString action.method
