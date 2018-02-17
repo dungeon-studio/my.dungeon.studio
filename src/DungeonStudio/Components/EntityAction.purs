@@ -15,7 +15,7 @@ import Data.Lens.Getter ((^.))
 import Data.Maybe (Maybe(..), fromMaybe, maybe)
 import Data.Newtype (unwrap, wrap)
 import Data.Siren (_fields, _href, _FieldName, getActionByName, getLinkByRel)
-import Data.Siren.Types (Action, Entity(..), Link(..))
+import Data.Siren.Types (Action, Entity(..), Field(..), Link(..))
 import Data.StrMap (StrMap, empty, insert, lookup)
 import Data.Tuple (Tuple(..), fst)
 import Data.URI.Host (_NameAddress)
@@ -87,13 +87,23 @@ component ent actionName =
               [ HH.text "Create a Character"]
           , HH.form
               [ HP.id_ "character", HE.onSubmit (HE.input Submit) ]
-              [ HH.div_ $ renderItemSelect st.collections <$> [ "race", "discipline" ] -- TODO Remove hard-coded fields
+              [ renderFields
               , HH.button
                   [ css buttonClass, HP.type_ ButtonSubmit ]
                   [ HH.text "Create" ]
               ]
           ]
         ]
+
+      renderFields = case st.action of
+        Nothing -> HH.div_ []
+        Just act -> HH.div_ $ act ^. _fields <#>
+          -- TODO: How do I know race and discipline are related to
+          -- the "races" and "disciplines" collections on the Characters entity?
+          \(Field field) -> case field.name of
+            "race" -> renderItemSelect st.collections "race"
+            "discipline" -> renderItemSelect st.collections "discipline"
+            _ -> HH.div [ css "white" ] [ HH.text field.name ]
 
       renderItemSelect cmaps rel =
         HH.div_

@@ -68,8 +68,7 @@ component =
     [ css "bg-black-90 top-0 w-100 ph3 pv4 pv4-ns ph4-m ph5-l" ]
     [ HH.nav
       [ css "f6 fw6 ttu tracked" ]
-      [
-        HH.a
+      [ HH.a
           [ css "link dim white dib mr3", HP.href "#/" ]
           [ HH.text "Characters" ]
       , HH.a

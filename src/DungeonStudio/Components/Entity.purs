@@ -13,6 +13,7 @@ import Data.Siren.Types (Entity(..), Link(..), SubEntity(..))
 import Debug.Trace (traceAnyA)
 import DungeonStudio.DSL.Client.Algebra (getRoot)
 import DungeonStudio.Control.Monad (AppM)
+import DungeonStudio.Components.EntityAction as EntityAction
 import DungeonStudio.CSS (css)
 import Halogen as H
 import Halogen.HTML as HH
@@ -23,13 +24,15 @@ type Input = Unit
 type Output = Void
 type Monad = AppM
 type State = { root :: Maybe Entity }
+type ChildQuery = EntityAction.Query
+type ChildSlot = Unit
 
 initialState :: State
 initialState = { root: Nothing }
 
 component :: String -> H.Component HH.HTML Query Input Output Monad
 component path =
-  H.lifecycleComponent
+  H.lifecycleParentComponent
     { initialState: const initialState
     , render
     , eval
@@ -39,27 +42,32 @@ component path =
     }
   where
 
-  render :: State -> H.ComponentHTML Query
-  render st = HH.div [ css "w-100 tc pa5" ] [ renderSubEntities st.root ]
-    where
-      renderSubEntities = case _ of
-        Nothing -> HH.div_ []
-        Just root -> HH.div_ $ renderSubEntity <$> root ^. _entities
+  render :: State -> H.ParentHTML Query ChildQuery ChildSlot Monad
+  render st = case st.root of
+    Nothing -> HH.div_ []
+    Just root ->
+      HH.div
+        [ css "w-100 tc pa5" ]
+        [ createForm root, renderSubEntities root ]
+      where
+        createForm ent = HH.slot unit (EntityAction.component ent "create-character") unit absurd
 
-      renderSubEntity = case _ of
-        EmbeddedLink l -> HH.div_ []
-        EmbeddedRepresentation (Entity ent) -> HH.div_ $ renderLink <$> ent.links
+        renderSubEntities root = HH.div_ $ renderSubEntity <$> root ^. _entities
 
-      renderLink (Link l) =
-        HH.div
-          [ css "white pv3 tracked" ]
-          [ HH.div
-              [ css "ttu"]
-              [ HH.text $ fromMaybe "Untitled" l.title]
-          , HH.div_ [ HH.text l.href ]
-          ]
+        renderSubEntity = case _ of
+          EmbeddedLink l -> HH.div_ []
+          EmbeddedRepresentation (Entity ent) -> HH.div_ $ renderLink <$> ent.links
 
-  eval :: Query ~> H.ComponentDSL State Query Output Monad
+        renderLink (Link l) =
+          HH.div
+            [ css "white pv3 tracked" ]
+            [ HH.div
+                [ css "ttu"]
+                [ HH.text $ fromMaybe "Untitled" l.title]
+            , HH.div_ [ HH.text l.href ]
+            ]
+
+  eval :: Query ~> H.ParentDSL State Query ChildQuery ChildSlot Output Monad
   eval = case _ of
     Init p next -> do
       root <- lift $ getRoot p
