@@ -5,6 +5,7 @@ module Data.Siren
 , _href
 , _rel
 , _ActionName
+, _ActionTitle
 , _FieldName
 , getActionByName
 , getLinkByRel
@@ -54,6 +55,9 @@ _rel = _Newtype <<< lens (_.rel) (_ {rel = _ })
 
 _ActionName :: Lens' Action String
 _ActionName = _Newtype <<< lens (_.name) (_ {name = _ })
+
+_ActionTitle :: Lens' Action String
+_ActionTitle = _Newtype <<< lens (\a -> fromMaybe "" a.title) (\a v -> a { title = Just v })
 
 _FieldName :: Lens' Field String
 _FieldName = _Newtype <<< lens (_.name) (_ {name = _ })

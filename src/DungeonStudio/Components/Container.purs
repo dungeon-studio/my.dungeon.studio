@@ -10,10 +10,11 @@ import Control.Monad.Aff (Aff, launchAff_)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Trans.Class (lift)
 import Data.Maybe (Maybe(..))
-import Data.Either.Nested (Either2)
-import Data.Functor.Coproduct.Nested (Coproduct2)
+import Data.Either.Nested (Either3)
+import Data.Functor.Coproduct.Nested (Coproduct3)
 import DungeonStudio.DSL.Auth0.Algebra as Auth0
 import DungeonStudio.Components.Entity as Entity
+import DungeonStudio.Components.EntityAction as EntityAction
 import DungeonStudio.Components.Login as Login
 import DungeonStudio.CSS (css)
 import DungeonStudio.Control.Monad (AppM)
@@ -31,8 +32,8 @@ data AuthStatus = Authenticated | NotAuthenticated | Loading
 type State = { auth :: AuthStatus, route :: RT.Route }
 type Input = Unit
 type Output = Void
-type ChildQuery = Coproduct2 Login.Query Entity.Query
-type ChildSlot = Either2 Unit Unit
+type ChildQuery = Coproduct3 Login.Query Entity.Query EntityAction.Query
+type ChildSlot = Either3 Unit Unit Unit
 type Monad = AppM
 
 headerClass :: String
@@ -65,21 +66,39 @@ component =
     ]
 
   header = HH.header
-    [ css "bg-black-90 top-0 w-100 ph3 pv4 pv4-ns ph4-m ph5-l" ]
+    [ css "" ]
     [ HH.nav
-      [ css "f6 fw6 ttu tracked" ]
-      [ HH.a
-          [ css "link dim white dib mr3", HP.href "#/" ]
-          [ HH.text "Characters" ]
-      , HH.a
-          [ css "link fr dim white dib", HP.href "#", HE.onClick (HE.input_ Logout) ]
-          [ HH.text "Logout" ]
+      [ css "ph3 black" ]
+      [ HH.div
+        [ css "nav-wrapper" ]
+        [ HH.ul
+            [ css "right" ]
+            [ HH.li_
+              [ HH.a
+                [ css "f5 fw6 ttu tracked dim link"
+                , HP.href "#", HE.onClick (HE.input_ Logout)
+                ]
+                [ HH.text "Logout" ]
+              ]
+            ]
+        , HH.ul
+            [ css "left" ]
+            [ HH.li_
+              [ HH.a
+                [ css "f5 fw6 ttu tracked dim link"
+                , HP.href "#/characters"
+                ]
+                [ HH.text "Characters" ]
+              ]
+            ]
+        ]
       ]
     ]
 
-  content st = HH.div [ css "pa3" ]
+  content st = HH.div [ css "" ]
     [ case st.route of
         RT.Characters -> HH.slot' CP.cp2 unit (Entity.component "/characters") unit absurd
+        RT.CharacterCreate -> HH.slot' CP.cp3 unit (EntityAction.component "/characters" "create-character") unit absurd
     ]
 
   eval :: Query ~> H.ParentDSL State Query ChildQuery ChildSlot Output Monad

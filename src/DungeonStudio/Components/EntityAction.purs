@@ -12,7 +12,7 @@ import Data.Either (either)
 import Data.Lens.Getter ((^.))
 import Data.Maybe (Maybe(..), fromMaybe, maybe)
 import Data.Newtype (unwrap, wrap)
-import Data.Siren (_fields, _href, _FieldName, getActionByName, getLinkByRel)
+import Data.Siren (_fields, _href, _ActionName, _ActionTitle, _FieldName, getActionByName, getLinkByRel)
 import Data.Siren.Types (Action, Entity(..), Field(..), Link(..))
 import Data.StrMap (StrMap, empty, insert, lookup)
 import Data.Tuple (Tuple(..), fst)
@@ -20,7 +20,7 @@ import Data.URI.Host (_NameAddress)
 import Data.URI.Scheme (print)
 import Data.URI.URI (_authority, _hierPart, _hosts, _scheme, parse)
 import Debug.Trace (traceAnyA)
-import DungeonStudio.DSL.Client.Algebra (ResponseType(..), resolveAction, resolveLink)
+import DungeonStudio.DSL.Client.Algebra (ResponseType(..), getRoot, resolveAction, resolveLink)
 import DungeonStudio.Control.Monad (AppM)
 import DungeonStudio.CSS (css)
 import DOM.Event.Event (preventDefault)
@@ -34,7 +34,7 @@ import Halogen.HTML.Properties.ARIA as HPA
 import Prelude (type (~>), class Functor, Unit, Void, ($), ($>), (>>>), (<<<), (#), (<>), (<#>), (<$>), (==), (/=), bind, const, discard, flip, pure)
 
 data Query a =
-  Init Entity String a
+  Init String String a
   | Submit Event a
   | UpdateSelect String String a
 
@@ -53,9 +53,6 @@ type CollectionMap =
   , collection  :: Collection
   }
 
-buttonClass :: String
-buttonClass = "f6 pointer white bg-animate bg-dark-gray hover-bg-gray tc bn ph3 mt3 pv2 ttu tracked"
-
 initialState :: State
 initialState =
   { collections: []
@@ -64,8 +61,8 @@ initialState =
   , action: Nothing
   }
 
-component :: Entity -> String -> H.Component HH.HTML Query Input Output Monad
-component ent actionName =
+component :: String -> String -> H.Component HH.HTML Query Input Output Monad
+component cls actionName =
   H.lifecycleComponent
     { initialState: const initialState
     , render
@@ -77,74 +74,99 @@ component ent actionName =
   where
 
   render :: State -> H.ComponentHTML Query
-  render st = HH.div [ css "w-100 tc pa5" ] renderForm
+  render st = HH.div [ css "container" ] [ renderForm ]
     where
-      renderForm =
-        [ HH.div_
-          [ HH.div
-              [ css "white fw7 pb3 header" ]
-              [ HH.text "Create a Character"]
-          , HH.form
-              [ HP.id_ "character", HE.onSubmit (HE.input Submit) ]
-              [ renderFields
-              , HH.button
-                  [ css buttonClass, HP.type_ ButtonSubmit ]
-                  [ HH.text "Create" ]
-              ]
-          ]
-        ]
-
-      renderFields = case st.action of
+      renderForm = case st.action of
         Nothing -> HH.div_ []
-        Just act -> HH.div_ $ act ^. _fields <#>
+        Just action -> do
+          HH.div
+            [ css "row" ]
+            [ HH.div
+                [ css "" ]
+                [ HH.text $ action ^. _ActionTitle ]
+            , HH.form
+                [ HP.id_ $ action ^. _ActionName
+                , HE.onSubmit $ HE.input Submit
+                , css "col s12"
+                ]
+                [ renderFields action
+                , HH.button
+                    [ css "button btn waves-effect waves-light mt4"
+                    , HP.type_ ButtonSubmit
+                    ]
+                    [ HH.text $ action ^. _ActionTitle ]
+            ]
+          ]
+
+      renderFields act =
+        HH.div_ $ act ^. _fields <#>
           -- TODO: How do I know race and discipline are related to
           -- the "races" and "disciplines" collections on the Characters entity?
           \(Field field) -> case field.name of
             "race" -> renderItemSelect st.collections "race"
             "discipline" -> renderItemSelect st.collections "discipline"
-            _ -> HH.div [ css "white" ] [ HH.text field.name ]
+            _ -> HH.div [ css "" ] [ HH.text field.name ]
 
       renderItemSelect cmaps rel =
-        HH.div_
-            [ HH.label
-                [ css "mh2 white ttu tracked db pv3"
-                , HP.for rel
-                ]
-                [ HH.text rel ]
-            , HH.select
-                [ HP.id_ rel
-                , css "pa1 bg-white w5-ns w-70 mb3"
-                , HE.onValueChange $ HE.input (UpdateSelect rel)
-                ]
-                (itemsToOptions rel cmaps)
-            , maybe (HH.div_ []) renderItem
+        HH.div
+          [ css "mv3" ]
+          [ HH.label
+              [ css "f5"
+              , HP.for rel
+              ]
+              [ HH.text rel ]
+          , HH.select
+              [ HP.id_ rel
+              , HP.required true
+              , css "browser-default"
+              , HE.onValueChange $ HE.input (UpdateSelect rel)
+              ]
+              $ itemsToOptions rel cmaps
+          , if rel == "race" then
+              maybe (HH.div_ []) renderItem
                 $ lookup rel st.fields
                   # maybe Nothing (flip lookupItem cmaps)
-            ]
+            else HH.div_ []
+          ]
 
       renderItem (Item i) = maybe (HH.div_ []) renderData i.data
 
       renderData ds =
-        HH.div
-          [ css "white" ]
-          $ ds # filter (\(Datum d) -> d.name /= "name") <#> renderDatum
-        where
-          renderDatum (Datum d) =
-            HH.div
-              []
-              [ HH.span [] [ HH.text $ fromMaybe "" d.prompt ]
-              , HH.span [] [ HH.text $ " " ]
-              , HH.span [] [ HH.text $ fromMaybe "" d.value ]
+        HH.table
+          [ css "white centered responsive-table" ]
+          [ HH.thead_
+              [ HH.tr_
+                  $ ds # filter (\(Datum d) -> d.name /= "name")
+                    <#> renderDatumHead
               ]
+          , HH.tbody_
+              [ HH.tr_
+                  $ ds # filter (\(Datum d) -> d.name /= "name")
+                    <#> renderDatumBody
+              ]
+          ]
+        where
+          renderDatumHead (Datum d) =
+            HH.th
+              [ css "black-text" ]
+              [ HH.text $ fromMaybe "" d.prompt ]
+          renderDatumBody (Datum d) =
+            HH.td
+              [ css "black-text" ]
+              [ HH.text $ fromMaybe "" d.value ]
 
   eval :: Query ~> H.ComponentDSL State Query Output Monad
   eval = case _ of
-    Init e an next -> do
-      rs <- fetchCollections e
-      H.modify _{ root = Just e
-                , collections = collectionMaps rs
-                , action = getActionByName e an
-                } $> next
+    Init c an next -> do
+      root <- lift $ getRoot c
+      case root of
+        Nothing -> pure next
+        Just r -> do
+          rs <- fetchCollections r
+          H.modify _{ root = root
+                    , collections = collectionMaps rs
+                    , action = getActionByName r an
+                    } $> next
     UpdateSelect rel path next -> do
        st <- H.get
        case st.root of
@@ -163,7 +185,7 @@ component ent actionName =
           lift $ resolveAction action (wrap fields) $> next
         _ -> pure next
 
-  initializer = Just $ H.action $ Init ent actionName
+  initializer = Just $ H.action $ Init cls actionName
   finalizer = Nothing
 
 fetchCollections

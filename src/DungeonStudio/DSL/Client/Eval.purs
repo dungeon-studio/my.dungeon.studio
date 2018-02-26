@@ -96,5 +96,6 @@ handleClient (ResolveAction (Action action) (Payload payload) a) = do
       pure $ a $ hush $ parse res.response
 
 -- TODO Make this throw on parse errors?
+-- TODO Do not attempt to parse error responses
 parse :: String -> Either MultipleErrors ResponseType
 parse = readJSON

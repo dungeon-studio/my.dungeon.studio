@@ -21,9 +21,6 @@ type Output = Void
 type State = Unit
 type Monad = AppM
 
-buttonClass :: String
-buttonClass = "f6 pointer white bg-animate bg-dark-gray hover-bg-gray tc bn ph3 mb3 pv2 ttu tracked"
-
 component :: H.Component HH.HTML Query Input Output Monad
 component =
   H.component
@@ -37,16 +34,16 @@ component =
   render :: State -> H.ComponentHTML Query
   render _ = HH.div [ css "dt vh-100 w-100" ]
     [ HH.div
-        [ css "dtc v-mid tc white ph3 ph4-l" ]
+        [ css "dtc v-mid tc white-text ph3 ph4-l" ]
         [
           HH.img [ css "pa3 mw3 hover dim", HP.src $ getImgSrc "logo-splash.svg" ]
         , HH.div [ css "f4 fw2 tracked ttu mb4 lh-title" ]
             [
-              HH.span [ css "fw4" ] [ HH.text "Dungeon" ]
+              HH.span [ css "fw6" ] [ HH.text "Dungeon" ]
             , HH.span [ css "fw1" ] [ HH.text " Studio" ]
             ]
         , HH.button
-            [ css buttonClass, HE.onClick (HE.input_ Login) ]
+            [ css "btn waves-effect waves-light fw6", HE.onClick (HE.input_ Login) ]
             [ HH.text "Login" ]
         ]
     ]

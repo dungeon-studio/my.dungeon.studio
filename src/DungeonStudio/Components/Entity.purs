@@ -4,6 +4,7 @@ module DungeonStudio.Components.Entity
 ) where
 
 import Control.Monad.Trans.Class (lift)
+import Data.Array (filter, notElem)
 import Data.Lens.Getter ((^.))
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Siren (_entities)
@@ -15,7 +16,8 @@ import DungeonStudio.Components.EntityAction as EntityAction
 import DungeonStudio.CSS (css)
 import Halogen as H
 import Halogen.HTML as HH
-import Prelude (type (~>), Unit, Void, ($), (<$>), ($>), absurd, bind, const, unit)
+import Halogen.HTML.Properties as HP
+import Prelude (type (~>), Unit, Void, ($), (#), (<$>), ($>), bind, const)
 
 data Query a = Init String a
 
@@ -46,24 +48,43 @@ component path =
     Nothing -> HH.div_ []
     Just root ->
       HH.div
-        [ css "w-100 tc pa5" ]
-        [ createForm root, renderSubEntities root ]
+        [ css "container" ]
+        -- TODO: Do not hardcode this link?
+        [ HH.div
+            [ css "row" ]
+            [ HH.div
+                [ css "col s12 l3 m4" ]
+                [ HH.div
+                  [ css "card" ]
+                  [ HH.div
+                    [ css "card-content" ]
+                    [ HH.a
+                      [ css "card-title link underline-hover", HP.href "#/characters/create" ]
+                      [ HH.text "Create Character" ]
+                    ]
+                  ]
+                ]
+            , HH.div_ $ renderSubEntity <$> root ^. _entities
+            ]
+        ]
       where
-        createForm ent = HH.slot unit (EntityAction.component ent "create-character") unit absurd
-
-        renderSubEntities root = HH.div_ $ renderSubEntity <$> root ^. _entities
-
         renderSubEntity = case _ of
           EmbeddedLink l -> HH.div_ []
-          EmbeddedRepresentation (Entity ent) -> HH.div_ $ renderLink <$> ent.links
+          EmbeddedRepresentation (Entity ent) ->
+            HH.div
+              [ css "col s12 l3 m4" ]
+              [ HH.div
+                [ css "card" ]
+                $ renderLink <$> (ent.links # filter (\(Link l) -> "self" `notElem` l.rel))
+              ]
 
         renderLink (Link l) =
           HH.div
-            [ css "white pv3 tracked" ]
+            [ css "card-content" ]
             [ HH.div
-                [ css "ttu"]
+                [ css "card-title"]
                 [ HH.text $ fromMaybe "Untitled" l.title]
-            , HH.div_ [ HH.text l.href ]
+            , HH.div [ css "truncate" ] [ HH.text l.href ]
             ]
 
   eval :: Query ~> H.ParentDSL State Query ChildQuery ChildSlot Output Monad
