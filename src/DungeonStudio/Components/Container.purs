@@ -68,14 +68,14 @@ component =
   header = HH.header
     [ css "" ]
     [ HH.nav
-      [ css "ph3 black" ]
+      [ css "ph3 grey darken-4" ]
       [ HH.div
         [ css "nav-wrapper" ]
         [ HH.ul
             [ css "right" ]
             [ HH.li_
               [ HH.a
-                [ css "f5 fw6 ttu tracked dim link"
+                [ css "f5 fw6 ttu tracked link"
                 , HP.href "#", HE.onClick (HE.input_ Logout)
                 ]
                 [ HH.text "Logout" ]
@@ -85,7 +85,7 @@ component =
             [ css "left" ]
             [ HH.li_
               [ HH.a
-                [ css "f5 fw6 ttu tracked dim link"
+                [ css "f5 fw6 ttu tracked link"
                 , HP.href "#/characters"
                 ]
                 [ HH.text "Characters" ]
@@ -95,7 +95,7 @@ component =
       ]
     ]
 
-  content st = HH.div [ css "" ]
+  content st = HH.div [ css "container pa3" ]
     [ case st.route of
         RT.Characters -> HH.slot' CP.cp2 unit (Entity.component "/characters") unit absurd
         RT.CharacterCreate -> HH.slot' CP.cp3 unit (EntityAction.component "/characters" "create-character") unit absurd

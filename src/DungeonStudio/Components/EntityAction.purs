@@ -6,6 +6,10 @@ module DungeonStudio.Components.EntityAction
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Trans.Class (class MonadTrans, lift)
 import Control.Parallel (class Parallel, parTraverse)
+import CSS (fromString)
+import CSS.Flexbox (JustifyContentValue(..), justifyContent)
+import CSS.Geometry (height)
+import CSS.Size (px)
 import Data.Array (catMaybes, concatMap, elem, filter, find, foldl, head)
 import Data.CollectionJSON (CollectionJSON(..), Collection, Datum(..), Item(..), collectionMime)
 import Data.Either (either)
@@ -21,14 +25,16 @@ import Data.URI.Scheme (print)
 import Data.URI.URI (_authority, _hierPart, _hosts, _scheme, parse)
 import Debug.Trace (traceAnyA)
 import DungeonStudio.DSL.Client.Algebra (ResponseType(..), getRoot, resolveAction, resolveLink)
+import DungeonStudio.Components.Loader (loader)
 import DungeonStudio.Control.Monad (AppM)
 import DungeonStudio.CSS (css)
 import DOM.Event.Event (preventDefault)
 import DOM.Event.Types (Event)
 import DOM.HTML.Indexed.ButtonType (ButtonType(..))
 import Halogen as H
-import Halogen.HTML.Events as HE
 import Halogen.HTML as HH
+import Halogen.HTML.CSS (style)
+import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Halogen.HTML.Properties.ARIA as HPA
 import Prelude (type (~>), class Functor, Unit, Void, ($), ($>), (>>>), (<<<), (#), (<>), (<#>), (<$>), (==), (/=), bind, const, discard, flip, pure)
@@ -45,6 +51,7 @@ type State =
   , fields      :: StrMap String
   , root        :: Maybe Entity
   , action      :: Maybe Action
+  , loading     :: Boolean
   }
 type Monad = AppM
 
@@ -59,6 +66,7 @@ initialState =
   , fields: empty
   , root: Nothing
   , action: Nothing
+  , loading: true
   }
 
 component :: String -> String -> H.Component HH.HTML Query Input Output Monad
@@ -74,98 +82,109 @@ component cls actionName =
   where
 
   render :: State -> H.ComponentHTML Query
-  render st = HH.div [ css "container" ] [ renderForm ]
-    where
-      renderForm = case st.action of
-        Nothing -> HH.div_ []
-        Just action -> do
-          HH.div
-            [ css "row" ]
-            [ HH.div
-                [ css "" ]
-                [ HH.text $ action ^. _ActionTitle ]
-            , HH.form
-                [ HP.id_ $ action ^. _ActionName
-                , HE.onSubmit $ HE.input Submit
-                , css "col s12"
-                ]
-                [ renderFields action
-                , HH.button
-                    [ css "button btn waves-effect waves-light mt4"
-                    , HP.type_ ButtonSubmit
-                    ]
-                    [ HH.text $ action ^. _ActionTitle ]
-            ]
-          ]
-
-      renderFields act =
-        HH.div_ $ act ^. _fields <#>
-          -- TODO: How do I know race and discipline are related to
-          -- the "races" and "disciplines" collections on the Characters entity?
-          \(Field field) -> case field.name of
-            "race" -> renderItemSelect st.collections "race"
-            "discipline" -> renderItemSelect st.collections "discipline"
-            _ -> HH.div [ css "" ] [ HH.text field.name ]
-
-      renderItemSelect cmaps rel =
-        HH.div
-          [ css "mv3" ]
-          [ HH.label
-              [ css "f5"
-              , HP.for rel
-              ]
-              [ HH.text rel ]
-          , HH.select
-              [ HP.id_ rel
-              , HP.required true
-              , css "browser-default"
-              , HE.onValueChange $ HE.input (UpdateSelect rel)
-              ]
-              $ itemsToOptions rel cmaps
-          , if rel == "race" then
-              maybe (HH.div_ []) renderItem
-                $ lookup rel st.fields
-                  # maybe Nothing (flip lookupItem cmaps)
-            else HH.div_ []
-          ]
-
-      renderItem (Item i) = maybe (HH.div_ []) renderData i.data
-
-      renderData ds =
-        HH.table
-          [ css "white centered responsive-table" ]
-          [ HH.thead_
-              [ HH.tr_
-                  $ ds # filter (\(Datum d) -> d.name /= "name")
-                    <#> renderDatumHead
-              ]
-          , HH.tbody_
-              [ HH.tr_
-                  $ ds # filter (\(Datum d) -> d.name /= "name")
-                    <#> renderDatumBody
-              ]
-          ]
+  render st = case st.loading of
+    true ->
+      HH.div
+        [ css "row valign-wrapper"
+        , style do
+            height $ px 500.0
+            justifyContent $ JustifyContentValue $ fromString "center"
+        ]
+        [ loader ]
+    false ->
+      HH.div_ [ renderForm ]
         where
-          renderDatumHead (Datum d) =
-            HH.th
-              [ css "black-text" ]
-              [ HH.text $ fromMaybe "" d.prompt ]
-          renderDatumBody (Datum d) =
-            HH.td
-              [ css "black-text" ]
-              [ HH.text $ fromMaybe "" d.value ]
+          renderForm = case st.action of
+            Nothing -> HH.div_ []
+            Just action -> do
+              HH.div
+                [ css "row" ]
+                [ HH.div
+                    [ css "" ]
+                    [ HH.text $ action ^. _ActionTitle ]
+                , HH.form
+                    [ HP.id_ $ action ^. _ActionName
+                    , HE.onSubmit $ HE.input Submit
+                    , css "col s12"
+                    ]
+                    [ renderFields action
+                    , HH.button
+                        [ css "button btn waves-effect waves-light mt3"
+                        , HP.type_ ButtonSubmit
+                        ]
+                        [ HH.text $ action ^. _ActionTitle ]
+                ]
+              ]
+
+          renderFields act =
+            HH.div_ $ act ^. _fields <#>
+              -- TODO: How do I know race and discipline are related to
+              -- the "races" and "disciplines" collections on the Characters entity?
+              \(Field field) -> case field.name of
+                "race" -> renderItemSelect st.collections "race"
+                "discipline" -> renderItemSelect st.collections "discipline"
+                _ -> HH.div [ css "" ] [ HH.text field.name ]
+
+          renderItemSelect cmaps rel =
+            HH.div
+              [ css "mv3" ]
+              [ HH.label
+                  [ css "f5"
+                  , HP.for rel
+                  ]
+                  [ HH.text rel ]
+              , HH.select
+                  [ HP.id_ rel
+                  , HP.required true
+                  , css "browser-default"
+                  , HE.onValueChange $ HE.input (UpdateSelect rel)
+                  ]
+                  $ itemsToOptions rel cmaps
+              , if rel == "race" then
+                  maybe (HH.div_ []) renderItem
+                    $ lookup rel st.fields
+                      # maybe Nothing (flip lookupItem cmaps)
+                else HH.div_ []
+              ]
+
+          renderItem (Item i) = maybe (HH.div_ []) renderData i.data
+
+          renderData ds =
+            HH.table
+              [ css "white centered responsive-table" ]
+              [ HH.thead_
+                  [ HH.tr_
+                      $ ds # filter (\(Datum d) -> d.name /= "name")
+                        <#> renderDatumHead
+                  ]
+              , HH.tbody_
+                  [ HH.tr_
+                      $ ds # filter (\(Datum d) -> d.name /= "name")
+                        <#> renderDatumBody
+                  ]
+              ]
+            where
+              renderDatumHead (Datum d) =
+                HH.th
+                  [ css "black-text" ]
+                  [ HH.text $ fromMaybe "" d.prompt ]
+              renderDatumBody (Datum d) =
+                HH.td
+                  [ css "black-text" ]
+                  [ HH.text $ fromMaybe "" d.value ]
 
   eval :: Query ~> H.ComponentDSL State Query Output Monad
   eval = case _ of
     Init c an next -> do
       root <- lift $ getRoot c
       case root of
-        Nothing -> pure next
+        Nothing -> H.modify _{ loading = false } $> next
         Just r -> do
           rs <- fetchCollections r
           H.modify _{ root = root
                     , collections = collectionMaps rs
                     , action = getActionByName r an
+                    , loading = false
                     } $> next
     UpdateSelect rel path next -> do
        st <- H.get

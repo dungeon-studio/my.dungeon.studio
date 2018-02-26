@@ -43,7 +43,7 @@ component =
             , HH.span [ css "fw1" ] [ HH.text " Studio" ]
             ]
         , HH.button
-            [ css "btn waves-effect waves-light fw6", HE.onClick (HE.input_ Login) ]
+            [ css "btn waves-effect waves-light", HE.onClick (HE.input_ Login) ]
             [ HH.text "Login" ]
         ]
     ]

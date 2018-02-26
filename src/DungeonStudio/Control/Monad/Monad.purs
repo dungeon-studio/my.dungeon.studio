@@ -11,6 +11,7 @@ import DungeonStudio.DSL.Auth0.Core (AUTH0EFF)
 import DungeonStudio.DSL.Auth0.Algebra (AUTH0)
 import DungeonStudio.DSL.Client.Algebra (CLIENT)
 import DungeonStudio.Env (Env)
+import DungeonStudio.Materialize (MATERIALEFF)
 import Halogen.Aff as HA
 import Run (Run, AFF, EFF)
 import Run.Reader (READER)
@@ -21,6 +22,7 @@ type AppEffects = HA.HalogenEffects
   , auth0 :: AUTH0EFF
   , console :: CONSOLE
   , dom :: DOM
+  , material :: MATERIALEFF
   , now :: NOW
   , storage :: STORAGE
   )
