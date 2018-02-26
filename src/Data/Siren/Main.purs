@@ -12,7 +12,6 @@ module Data.Siren
 )
 where
 
-import Prelude
 import Data.Array (elem, find)
 import Data.Lens.Iso (Iso, iso)
 import Data.Maybe (Maybe(..), fromMaybe)
@@ -27,6 +26,7 @@ import Data.Siren.Types
   , Link
   , SubEntity
   )
+import Prelude ((<<<), (#), (==))
 
 sirenMime :: String
 sirenMime = "application/vnd.siren+json"

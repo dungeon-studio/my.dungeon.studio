@@ -1,6 +1,5 @@
 module Main where
 
-import Prelude
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (error)
@@ -15,6 +14,7 @@ import DungeonStudio.Control.Monad (AppEffects, AppM)
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.VDom.Driver (runUI)
+import Prelude (type (~>), Unit, ($), (<<<), (<>), bind, show, unit)
 import Run (runBaseAff')
 import Run.Reader (runReader)
 

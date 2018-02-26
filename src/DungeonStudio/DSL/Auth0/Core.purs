@@ -10,7 +10,6 @@ module DungeonStudio.DSL.Auth0.Core
 , sessionKey
 ) where
 
-import Prelude
 import Control.Monad.Aff (Aff)
 import Control.Monad.Aff.Compat (EffFnAff, fromEffFnAff)
 import Control.Monad.Eff (Eff(), kind Effect)
@@ -22,6 +21,7 @@ import DOM.HTML (window)
 import DOM.HTML.Location as Location
 import DOM.HTML.Window as Window
 import DungeonStudio.Env (Env(..))
+import Prelude (Unit, ($), (<<<), (>>=), bind, pure)
 
 type Auth0Config =
   { clientID :: String

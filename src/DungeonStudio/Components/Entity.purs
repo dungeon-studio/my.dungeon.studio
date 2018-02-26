@@ -3,8 +3,6 @@ module DungeonStudio.Components.Entity
 , component
 ) where
 
-import Prelude
-
 import Control.Monad.Trans.Class (lift)
 import Data.Lens.Getter ((^.))
 import Data.Maybe (Maybe(..), fromMaybe)
@@ -17,6 +15,7 @@ import DungeonStudio.Components.EntityAction as EntityAction
 import DungeonStudio.CSS (css)
 import Halogen as H
 import Halogen.HTML as HH
+import Prelude (type (~>), Unit, Void, ($), (<$>), ($>), absurd, bind, const, unit)
 
 data Query a = Init String a
 

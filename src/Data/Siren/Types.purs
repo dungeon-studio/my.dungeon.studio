@@ -6,14 +6,13 @@ module Data.Siren.Types
 , Field(..)
 ) where
 
-import Prelude
-
 import Control.Alt ((<|>))
 import Data.Generic.Rep as Rep
 import Data.Generic.Rep.Show (genericShow)
 import Data.StrMap (StrMap)
 import Data.Maybe (Maybe)
 import Data.Newtype (class Newtype)
+import Prelude (class Show, (<$>))
 import Simple.JSON (class ReadForeign, class WriteForeign, read)
 
 -- | The top-level object for an @application/vnd.siren+json@ resource.

@@ -3,7 +3,6 @@ module DungeonStudio.DSL.Auth0.Eval
 , runAuth0
 ) where
 
-import Prelude
 import Control.Monad.Aff (attempt)
 import Control.Monad.Eff.Now (now)
 import Data.Either (Either(..))
@@ -19,6 +18,7 @@ import DungeonStudio.DSL.Auth0.Core (Session(..), WebAuth, authorize, parseHash,
 import DungeonStudio.DSL.Auth0.Algebra (Auth0DSLF(..), AUTH0, _auth0)
 import DungeonStudio.Env (Env)
 import DungeonStudio.Control.Monad (AppEffects)
+import Prelude (type (~>), ($), (>>=), (*), (+), (<), bind, discard, pure)
 import Run (Run, AFF, EFF, interpret, liftEff, liftAff, on, send)
 import Run.Reader (READER)
 

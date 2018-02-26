@@ -3,8 +3,6 @@ module DungeonStudio.Components.Login
 , component
 ) where
 
-import Prelude
-
 import Control.Monad.Trans.Class (lift)
 import Data.Maybe (Maybe(..))
 import DungeonStudio.Assets (getImgSrc)
@@ -15,6 +13,7 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
+import Prelude (type (~>), Unit, Void, ($), const, discard, pure, unit)
 
 data Query a = Login a
 type Input = Unit

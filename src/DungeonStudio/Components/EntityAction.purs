@@ -3,8 +3,6 @@ module DungeonStudio.Components.EntityAction
 , component
 ) where
 
-import Prelude
-
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Trans.Class (class MonadTrans, lift)
 import Control.Parallel (class Parallel, parTraverse)
@@ -33,6 +31,7 @@ import Halogen.HTML.Events as HE
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
 import Halogen.HTML.Properties.ARIA as HPA
+import Prelude (type (~>), class Functor, Unit, Void, ($), ($>), (>>>), (<<<), (#), (<>), (<#>), (<$>), (==), (/=), bind, const, discard, flip, pure)
 
 data Query a =
   Init Entity String a
@@ -128,7 +127,7 @@ component ent actionName =
       renderData ds =
         HH.div
           [ css "white" ]
-          $ map renderDatum $ ds # filter (\(Datum d) -> d.name /= "name")
+          $ ds # filter (\(Datum d) -> d.name /= "name") <#> renderDatum
         where
           renderDatum (Datum d) =
             HH.div

@@ -9,7 +9,6 @@ module DungeonStudio.DSL.Client.Algebra
 , resolveLink
 ) where
 
-import Prelude
 import Control.Alt ((<|>))
 import Data.CollectionJSON (CollectionJSON)
 import Data.Maybe (Maybe)
@@ -18,6 +17,7 @@ import Data.Siren.Types (Action, Entity, Link)
 import Data.StrMap (StrMap)
 import Data.Symbol (SProxy(..))
 import Data.Variant.Internal (FProxy)
+import Prelude ((<$>), class Functor, id)
 import Run (Run, lift)
 import Simple.JSON (class ReadForeign, read)
 

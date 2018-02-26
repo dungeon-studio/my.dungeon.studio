@@ -26,9 +26,9 @@ import Halogen.HTML.Properties as HP
 import Halogen.Component.ChildPath as CP
 import Routing (matches)
 
-data Query a = Init a | Logout a | ChangeRoute RT.Routes a
+data Query a = Init a | Logout a | ChangeRoute RT.Route a
 data AuthStatus = Authenticated | NotAuthenticated | Loading
-type State = { auth :: AuthStatus, route :: RT.Routes }
+type State = { auth :: AuthStatus, route :: RT.Route }
 type Input = Unit
 type Output = Void
 type ChildQuery = Coproduct2 Login.Query Entity.Query

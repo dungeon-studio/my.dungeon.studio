@@ -10,11 +10,11 @@ module DungeonStudio.DSL.Auth0.Algebra
 , setSession
 ) where
 
-import Prelude
 import Data.Maybe (Maybe)
 import Data.Symbol (SProxy(..))
 import Data.Variant.Internal (FProxy)
 import DungeonStudio.DSL.Auth0.Core (Session)
+import Prelude (class Functor, Unit, id, unit)
 import Run (Run, lift)
 
 data Auth0DSLF a

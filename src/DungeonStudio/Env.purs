@@ -4,13 +4,13 @@ module DungeonStudio.Env
 , getEnv
 ) where
 
-import Prelude
 import Control.Monad.Except (runExcept)
 import Data.Either (Either)
 import Data.Foreign (Foreign, MultipleErrors)
 import Data.Generic.Rep as Rep
 import Data.Generic.Rep.Show (genericShow)
 import Data.Newtype (class Newtype)
+import Prelude (class Show, ($))
 import Simple.JSON (class ReadForeign, read)
 
 newtype Env = Env

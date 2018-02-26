@@ -2,7 +2,7 @@ module DungeonStudio.Assets
 ( getImgSrc
 ) where
 
-import Prelude
+import Prelude ((<>))
 
 basePath :: String
 basePath = "/assets"

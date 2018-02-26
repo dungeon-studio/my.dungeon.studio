@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "dungeon-studio-ui",
+  "name": "my.dungeon.studio",
   "ignore": [
     "**/.*",
     "node_modules",

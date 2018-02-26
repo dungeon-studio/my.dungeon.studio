@@ -3,7 +3,6 @@ module DungeonStudio.DSL.Client.Eval
 , runClient
 ) where
 
-import Prelude
 import Data.Either (Either(..), hush)
 import Data.Foreign (MultipleErrors)
 import Data.Maybe (Maybe(..), fromMaybe, maybe)
@@ -18,6 +17,7 @@ import DungeonStudio.Control.Monad (AppEffects)
 import DungeonStudio.Env (Env(..))
 import Network.HTTP.Affjax (affjax, defaultRequest, get)
 import Network.HTTP.RequestHeader (RequestHeader(..))
+import Prelude (type (~>), ($), (>>=), (<>), (>>>), bind, pure)
 import Run (Run, AFF, EFF, interpret, liftAff, on, send)
 import Run.Reader (READER, ask)
 import Simple.JSON (readJSON, writeJSON)

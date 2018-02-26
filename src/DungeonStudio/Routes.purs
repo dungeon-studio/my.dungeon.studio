@@ -1,16 +1,19 @@
-module DungeonStudio.Routes where
+module DungeonStudio.Routes
+( Route(..)
+, routing
+) where
 
 import Control.Alt ((<$))
 import Prelude (class Show)
 import Routing.Match (Match)
 import Routing.Match.Class (lit)
 
-data Routes = Characters
+data Route = Characters
 
-instance showRoutes :: Show Routes where
+instance showRoutes :: Show Route where
   show Characters = "Characters"
 
-routing :: Match Routes
+routing :: Match Route
 routing = characters
   where
     characters = Characters <$ lit ""
